@@ -7,7 +7,7 @@
   "mute.mute_prefix": "{green}[Mute]: {white}",
   "warday.warday_prefix": "{green}[Warday]: {white}",
   "rebel.rebel_prefix": "{green}[Rebel]: {white}",
-		
+        
   "jail.kill_cmd": "{0} slayed themself",
 
   "warden.remove": "Warden Removed",

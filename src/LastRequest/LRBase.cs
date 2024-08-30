@@ -1,16 +1,7 @@
 // base lr class
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 
 // base LR impl
@@ -21,8 +12,6 @@ public abstract class LRBase
         PENDING,
         ACTIVE,
     }
-
-    
 
     protected LRBase(LastRequest lrManager,LastRequest.LRType lrType,int LRSlot,int actorSlot, String lrChoice)
     {
@@ -41,13 +30,12 @@ public abstract class LRBase
         weaponRestrict = "knife";
     }
 
-
     public virtual void Start()
     {
         var player = Utilities.GetPlayerFromSlot(playerSlot);
 
         // player is not alive cancel the lr
-        if(!player.IsLegalAlive())
+        if (!player.IsLegalAlive())
         {
             manager.EndLR(slot);
             return;
@@ -59,13 +47,13 @@ public abstract class LRBase
     public void Cleanup()
     {
         // clean up timer
-        Lib.KillTimer(ref timer);
+        JB.Lib.KillTimer(ref timer);
 
         // clean up laser
-        Lib.KillTimer(ref laserTimer);
+        JB.Lib.KillTimer(ref laserTimer);
 
         // killthe fail safe timer
-        Lib.KillTimer(ref failsafeTimer);
+        JB.Lib.KillTimer(ref failsafeTimer);
 
         laser.Destroy();
 
@@ -74,11 +62,8 @@ public abstract class LRBase
         // reset alive player
         CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
-
 
         // make sure our weapons dont get taken off 
         weaponRestrict = "";
@@ -94,9 +79,9 @@ public abstract class LRBase
 
         player.SetVelocity(1.0f);
 
-        if(player.IsCt())
+        if (player.IsCt())
         {
-            player.GiveArmour();
+            player.GiveArmor();
             player.GiveWeapon("deagle");
             player.GiveWeapon("m4a1");           
         }
@@ -104,22 +89,20 @@ public abstract class LRBase
 
     public void Lose()
     {
-        if(partner == null)
-        {
+        if (partner == null)
             return;
-        }
 
         CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
         CCSPlayerController? winner = Utilities.GetPlayerFromSlot(partner.playerSlot);
 
-        if(!player.IsLegal() || winner == null || !winner.IsLegal())
+        if (!player.IsLegal() || winner == null || !winner.IsLegal())
         {
             manager.EndLR(slot);
             return;
         }
 
-        JailPlugin.WinLR(winner,type);
-        JailPlugin.LoseLR(player,type);
+        JB.JailPlugin.WinLR(winner,type);
+        JB.JailPlugin.LoseLR(player,type);
 
         manager.EndLR(slot);
     }
@@ -137,7 +120,7 @@ public abstract class LRBase
 
         // check this was built correctly
         // TODO: is there a static way to ensure this is made properly or no?
-        if(partner == null)
+        if (partner == null)
         {
             manager.EndLR(slot);
             return;         
@@ -145,10 +128,8 @@ public abstract class LRBase
 
         CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
-        if(player.IsLegalAlive())
-        {
+        if (player.IsLegalAlive())
             player.Announce(LastRequest.LR_PREFIX,"Fight!");
-        }
 
         // renable damage
         // NOTE: start_lr can override this if it so pleases
@@ -159,10 +140,8 @@ public abstract class LRBase
         state = LrState.ACTIVE;
 
         // make partner lr active if pending
-        if(partner.state == LrState.PENDING)
-        {
+        if (partner.state == LrState.PENDING)
             partner.Activate();
-        }
     }
     
     // player setup -> NOTE: hp and gun stripping is done for us
@@ -202,9 +181,9 @@ public abstract class LRBase
         CCSPlayerController? loser = null;
         LRBase? winnerLR = null;
 
-        if(rnd.Next(0,2) == 0)
+        if (rnd.Next(0,2) == 0)
         {
-            if(partner != null)
+            if (partner != null)
             {
                 winner = Utilities.GetPlayerFromSlot(playerSlot);
                 loser =  Utilities.GetPlayerFromSlot(partner.playerSlot);
@@ -214,7 +193,7 @@ public abstract class LRBase
 
         else
         {
-            if(partner != null)
+            if (partner != null)
             {
                 winner =  Utilities.GetPlayerFromSlot(partner.playerSlot);
                 loser =  Utilities.GetPlayerFromSlot(playerSlot);
@@ -222,24 +201,21 @@ public abstract class LRBase
             }
         }
 
-
         return (winner,loser,winnerLR);
     }
 
 
     public void GiveLRNadeDelay(float delay, String name)
     {
-        if(JailPlugin.globalCtx == null)
-        {
+        if (JB.JailPlugin.globalCtx == null)
             return;
-        }
 
-        JailPlugin.globalCtx.AddTimer(delay,() => 
+        JB.JailPlugin.globalCtx.AddTimer(delay,() => 
         {
             CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
             // need to double check LR is actually still active...
-            if(player.IsLegalAlive() && manager.InLR(player))
+            if (player.IsLegalAlive() && manager.InLR(player))
             {
                 //Server.PrintToChatAll("give nade");
                 player.StripWeapons(true);
@@ -250,20 +226,16 @@ public abstract class LRBase
 
     static public void PrintCountdown(LRBase lr, int delay)
     {
-        if(lr.partner == null)
-        {
+        if (lr.partner == null)
             return;
-        }
 
         CCSPlayerController? tPlayer = Utilities.GetPlayerFromSlot(lr.playerSlot);
         CCSPlayerController? ctPlayer = Utilities.GetPlayerFromSlot(lr.partner.playerSlot);
 
-        if(!tPlayer.IsLegal() || !ctPlayer.IsLegal())
-        {
+        if (!tPlayer.IsLegal() || !ctPlayer.IsLegal())
             return;
-        }
 
-        if(lr.choice == "")
+        if (lr.choice == "")
         {
             tPlayer.PrintToCenter($"Starting {lr.lrName} against {ctPlayer.PlayerName} in {delay} seconds");
             ctPlayer.PrintToCenter($"Starting {lr.lrName} against {tPlayer.PlayerName} in {delay} seconds");
@@ -278,13 +250,11 @@ public abstract class LRBase
 
     public void CountdownStart()
     {
-        if(laserTimer == null)
+        if (laserTimer == null)
         {
             // create the laser timer
-            if(JailPlugin.globalCtx != null)
-            {
-                laserTimer = JailPlugin.globalCtx.AddTimer(1.0f / 25.0f,LaserTick,CSTimer.TimerFlags.STOP_ON_MAPCHANGE | CSTimer.TimerFlags.REPEAT);
-            }
+            if (JB.JailPlugin.globalCtx != null)
+                laserTimer = JB.JailPlugin.globalCtx.AddTimer(1.0f / 25.0f,LaserTick,CSTimer.TimerFlags.STOP_ON_MAPCHANGE | CSTimer.TimerFlags.REPEAT);
         }
 
         countdown.Start($"{lrName} starts in",5,this,PrintCountdown,manager.ActivateLR);
@@ -302,7 +272,7 @@ public abstract class LRBase
     public void DelayFailSafe(float delay)
     {
         Chat.Announce(LastRequest.LR_PREFIX,$"fail-safe active in {delay} seconds");
-        failsafeTimer = JailPlugin.globalCtx.AddTimer(delay,FailSafeActivate,CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
+        failsafeTimer = JB.JailPlugin.globalCtx.AddTimer(delay,FailSafeActivate,CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
     }
 
     public void LaserTick()
@@ -311,25 +281,18 @@ public abstract class LRBase
         CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
         CCSPlayerController? other = null;
 
-        if(partner != null)
-        {
+        if (partner != null)
             other = Utilities.GetPlayerFromSlot(partner.playerSlot);
-        }
 
         if(!player.IsLegalAlive() || other == null || !other.IsLegalAlive())
-        {
             return;
-        }
 
         CCSPlayerPawn? v1 = player.Pawn();
         CCSPlayerPawn? v2 = other.Pawn();
 
         // check we can get origin!
-        if(v1 == null || v2 == null || v1.AbsOrigin == null || v2.AbsOrigin == null)
-        {
+        if (v1 == null || v2 == null || v1.AbsOrigin == null || v2.AbsOrigin == null)
             return;
-        }
-
 
         Vector start = v1.AbsOrigin;
         Vector end = v2.AbsOrigin;
@@ -338,7 +301,7 @@ public abstract class LRBase
         start.Z += 3.0f;
         end.Z += 3.0f;
 
-        laser.Move(start,end);
+        laser.Move(start,end, 2.0f, JB.Lib.CYAN);
     }
 
     public virtual void EntCreated(String name) {}
@@ -379,7 +342,6 @@ public abstract class LRBase
 
     CSTimer.Timer? failsafeTimer = null;
     public bool failSafe = false;
-
 
     CSTimer.Timer? laserTimer = null;
 

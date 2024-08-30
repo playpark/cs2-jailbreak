@@ -1,23 +1,13 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Admin;
 using MySqlConnector;
 
 public class JailStats
 {
     public JailStats()
     {
-        for(int i = 0; i < 64; i++)
+        for (int i = 0; i < 64; i++)
         {
             playerStats[i] = new PlayerStat();
         }
@@ -27,7 +17,7 @@ public class JailStats
     {
         var lrPlayer = PlayerStatFromPlayer(player);
 
-        if(lrPlayer != null && type != LastRequest.LRType.NONE && player.IsLegal())
+        if (lrPlayer != null && type != LastRequest.LRType.NONE && player.IsLegal())
         {
             int idx = (int)type;
             lrPlayer.win[idx] += 1;
@@ -40,7 +30,7 @@ public class JailStats
     {
         var lrPlayer = PlayerStatFromPlayer(player);
 
-        if(lrPlayer != null && type != LastRequest.LRType.NONE && player.IsLegal())
+        if (lrPlayer != null && type != LastRequest.LRType.NONE && player.IsLegal())
         {
             int idx = (int)type;
             lrPlayer.loss[idx] += 1;
@@ -52,37 +42,31 @@ public class JailStats
 
     PlayerStat? PlayerStatFromPlayer(CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return null;
-        }
 
         return playerStats[player.Slot];        
     }
 
-
-
     void PrintStats(CCSPlayerController? invoke, CCSPlayerController? player)
     {
-        if(!invoke.IsLegal())
-        {
+        if (!invoke.IsLegal())
             return;
-        }
 
         var lrPlayer = PlayerStatFromPlayer(player);
 
-        if(lrPlayer != null && player.IsLegal())
+        if (lrPlayer != null && player.IsLegal())
         {
             invoke.PrintToChat($"{LastRequest.LR_PREFIX} lr stats for {player.PlayerName}");
 
-            for(int i = 0; i < LastRequest.LR_SIZE; i++)
+            for (int i = 0; i < LastRequest.LR_SIZE; i++)
             {
                 invoke.PrintToChat($"{LastRequest.LR_PREFIX} {LastRequest.LR_NAME[i]} win {lrPlayer.win[i]} : loss {lrPlayer.loss[i]}");
             }
         }
     }
 
-    public void LRStatsCmd(CCSPlayerController? player, CommandInfo command)
+    public void LRStatsCmd(CCSPlayerController? player)
     {
         // just do own player for now
         PrintStats(player,player);
@@ -92,9 +76,9 @@ public class JailStats
     {
         var lrPlayer = PlayerStatFromPlayer(player);
 
-        if(lrPlayer != null)
+        if (lrPlayer != null)
         {
-            for(int i = 0; i < LastRequest.LR_SIZE; i++)
+            for (int i = 0; i < LastRequest.LR_SIZE; i++)
             {
                 lrPlayer.win[i] = 0;
                 lrPlayer.loss[i] = 0;
@@ -115,13 +99,11 @@ public class JailStats
     {
         var database = await ConnectDB();
 
-        if(database == null)
-        {
+        if (database == null)
             return;
-        }
 
         // insert new player
-        using var insertPlayer = new MySqlCommand("INSERT IGNORE INTO stats (steamid,name) VALUES (@steam_id, @name)",database);
+        using var insertPlayer = new MySqlCommand($"INSERT IGNORE INTO {Config.Database.Table} (steamid,name) VALUES (@steam_id, @name)", database);
         insertPlayer.Parameters.AddWithValue("@steam_id",steamID);
         insertPlayer.Parameters.AddWithValue("@name",playerName);
 
@@ -139,9 +121,7 @@ public class JailStats
     public void IncDB(CCSPlayerController? player,LastRequest.LRType type, bool win)
     {
         if(!player.IsLegal() || type == LastRequest.LRType.NONE  || player.IsBot)
-        {
             return;
-        }
 
         String steamID = new SteamID(player.SteamID).SteamId2;
 
@@ -156,24 +136,15 @@ public class JailStats
     {
         var database = await ConnectDB();
 
-        if(database == null)
-        {
+        if (database == null)
             return;
-        }
 
         String name = LastRequest.LR_NAME[(int)type].Replace(" ","_");
 
-        if(win)
-        {
-            name += "_win";
-        }
+        if (win) name += "_win";
+        else name += "_loss";
 
-        else
-        {
-            name += "_loss";
-        }
-
-        using var incStat = new MySqlCommand($"UPDATE stats SET {name} = {name} + 1 WHERE steamid = @steam_id",database);
+        using var incStat = new MySqlCommand($"UPDATE {Config.Database.Table} SET {name} = {name} + 1 WHERE steamid = @steam_id",database);
         incStat.Parameters.AddWithValue("@steam_id",steamID);
 
         try 
@@ -194,18 +165,14 @@ public class JailStats
          // repull player from steamid if they are still around
         CCSPlayerController? player = Utilities.GetPlayerFromSteamId(id);
 
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         int slot = player.Slot;
 
         // allready cached we dont care
-        if(playerStats[slot].cached)
-        {
+        if (playerStats[slot].cached)
             return;
-        }
 
         // make sure this doesn't block the main thread
         Task.Run(async () =>
@@ -218,24 +185,22 @@ public class JailStats
     {
         var database = await ConnectDB();
 
-        if(database == null)
-        {
+        if (database == null)
             return;
-        }
-
+        
         // query steamid
-        using var querySteamID = new MySqlCommand("SELECT * FROM stats WHERE steamid = @steam_id",database);
+        using var querySteamID = new MySqlCommand($"SELECT * FROM {Config.Database.Table} WHERE steamid = @steam_id", database);
         querySteamID.Parameters.AddWithValue("@steam_id",steamID);
 
         try
         {
             var reader = await querySteamID.ExecuteReaderAsync();
             
-            if(reader.Read())
+            if (reader.Read())
             {
                 //Console.WriteLine($"reading out lr stats {player.PlayerName}");
 
-                for(int i = 0; i < LastRequest.LR_SIZE; i++)
+                for (int i = 0; i < LastRequest.LR_SIZE; i++)
                 {
                     String name = LastRequest.LR_NAME[i].Replace(" ","_");
 
@@ -251,7 +216,6 @@ public class JailStats
             else
             {
                 //Console.WriteLine("insert new entry");
-
                 InsertPlayer(steamID,playerName);
             }
 
@@ -266,10 +230,8 @@ public class JailStats
 
     public void LoadPlayer(CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         // attempt to cache player stats
         String name = player.PlayerName;
@@ -281,14 +243,14 @@ public class JailStats
 
     public void SetupDB(MySqlConnection? database)
     {
-        if(database == null)
+        if (database == null)
         {
             Console.WriteLine("Could not open jb database");
             return;
         }
 
         // Make sure Table exists
-        using var tableCmd = new MySqlCommand("CREATE TABLE IF NOT EXISTS stats (steamid varchar(64) PRIMARY KEY,name varchar(64))",database);
+        using var tableCmd = new MySqlCommand($"CREATE TABLE IF NOT EXISTS {Config.Database.Table} (steamid varchar(64) PRIMARY KEY,name varchar(64))",database);
         tableCmd.ExecuteNonQuery();
 
         // Check table size to see if we have the right number of LR's
@@ -297,10 +259,10 @@ public class JailStats
         var colReader = colCmd.ExecuteReader();
 
         int rowCount = 0;
-        while(colReader.Read())
-        {
+
+        while (colReader.Read())
             rowCount++;
-        }
+
         colReader.Close();
 
         int fields = (LastRequest.LR_SIZE * 2) + 2;
@@ -308,8 +270,8 @@ public class JailStats
         // rename the old entries
         try
         {
-            using var shotgunRenameWin = new MySqlCommand("ALTER TABLE stats CHANGE Shotgun_war_win War_win int DEFAULT 0",database);
-            using var shotgunRenameLoss = new MySqlCommand("ALTER TABLE stats CHANGE Shotgun_war_loss War_loss int DEFAULT 0",database);
+            using var shotgunRenameWin = new MySqlCommand($"ALTER TABLE {Config.Database.Table} CHANGE Shotgun_war_win War_win int DEFAULT 0", database);
+            using var shotgunRenameLoss = new MySqlCommand($"ALTER TABLE {Config.Database.Table} CHANGE Shotgun_war_loss War_loss int DEFAULT 0", database);
             shotgunRenameWin.ExecuteNonQuery();
             shotgunRenameLoss.ExecuteNonQuery();
         }
@@ -317,10 +279,10 @@ public class JailStats
         catch {}
 
         // NOTE: both win and lose i.e * 2 + steamid and name
-        if(rowCount != fields)
+        if (rowCount != fields)
         {
             // add lr fields
-            for(int i = 0; i < LastRequest.LR_SIZE; i++)
+            for (int i = 0; i < LastRequest.LR_SIZE; i++)
             {
                 String name = LastRequest.LR_NAME[i].Replace(" ","_");
 
@@ -328,36 +290,30 @@ public class JailStats
                 {
                     // NOTE: could use NOT Exists put old sql versions dont play nice
                     // ideally we would use an escaped statement but these strings aernt user controlled anyways
-                    using var insertTableWin = new MySqlCommand($"ALTER TABLE stats ADD COLUMN {name + "_win"} int DEFAULT 0",database);
+                    using var insertTableWin = new MySqlCommand($"ALTER TABLE {Config.Database.Table} ADD COLUMN {name + "_win"} int DEFAULT 0",database);
                     insertTableWin.ExecuteNonQuery();
 
-                    using var insertTableLoss = new MySqlCommand($"ALTER TABLE stats ADD COLUMN {name + "_loss"} int DEFAULT 0",database);
+                    using var insertTableLoss = new MySqlCommand($"ALTER TABLE {Config.Database.Table} ADD COLUMN {name + "_loss"} int DEFAULT 0",database);
                     insertTableLoss.ExecuteNonQuery();
                 }
 
                 catch {}
             }
-
             // add warden fields
-
         }
-
         Console.WriteLine("Setup jb stats");
-
     }
 
     public async Task<MySqlConnection?> ConnectDB()
     {
         // No credentials don't even try a connection
-        if(Config.username == "")
-        {
+        if (Config.Database.Username == "")
             return null;
-        }
 
         try
         {
             MySqlConnection? database = new MySqlConnection(
-                $"Server={Config.server};User ID={Config.username};Password={Config.password};Database={Config.database};Port={Config.port}");
+                $"Server={Config.Database.IP};User ID={Config.Database.Username};Password={Config.Database.Password};Database={Config.Database.Database};Port={Config.Database.Port}");
 
             await database.OpenAsync();
 
@@ -372,6 +328,5 @@ public class JailStats
     }
 
     public JailConfig Config = new JailConfig();
-
     PlayerStat[] playerStats = new PlayerStat[64];
 }

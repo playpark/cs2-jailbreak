@@ -1,18 +1,9 @@
 // base lr class
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using JB;
 using System.Drawing;
+using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 
 public abstract class SDBase
 {
@@ -28,7 +19,6 @@ public abstract class SDBase
         restrictDamage = true;
 
         // revive all dead players
-
 
         state = SDState.STARTED;
         Setup();
@@ -54,12 +44,12 @@ public abstract class SDBase
     public (CCSPlayerController, int) PickBoss()
     {
         // get valid players
-        var valid = Lib.GetAlivePlayers();
+        var valid = JB.Lib.GetAlivePlayers();
 
         CCSPlayerController? rigged = Utilities.GetPlayerFromSlot(riggedSlot);
 
         // override pick
-        if(rigged.IsLegalAlive())
+        if (rigged.IsLegalAlive())
         {
             var player = rigged;
             riggedSlot = -1;
@@ -78,13 +68,11 @@ public abstract class SDBase
 
     public void Disconnect(CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         // player has dced re roll the boss if we have one
-        if(player.Slot == bossSlot)
+        if (player.Slot == bossSlot)
         {
             (CCSPlayerController boss, int count) = PickBoss();
 
@@ -102,21 +90,21 @@ public abstract class SDBase
         CCSPlayerController? boss = Utilities.GetPlayerFromSlot(bossSlot);
 
         // reset the boss colour
-        if(boss.IsLegalAlive())
+        if (boss.IsLegalAlive())
         {
             boss.SetVelocity(1.0f);
             boss.SetColour(Color.FromArgb(255, 255, 255, 255));
         }
 
         CleanupPlayers();
+
+        Lib.ColorAllPlayerModels(Color.FromArgb(255, 255, 255, 255));
     }
 
     public bool IsBoss(CCSPlayerController? player)
     {
-        if(player == null)
-        {
+        if (player == null)
             return false;
-        }
 
         return player.Slot == bossSlot;
     }
@@ -131,8 +119,6 @@ public abstract class SDBase
     public virtual void EntCreated(CEntityInstance entity) {}
     public virtual void GrenadeThrown(CCSPlayerController? player) {}
 
-    
-
     public virtual void Death(CCSPlayerController? player, CCSPlayerController? attacker, String weapon) {}
 
     public abstract void SetupPlayer(CCSPlayerController player);
@@ -141,7 +127,7 @@ public abstract class SDBase
 
     public void SetupPlayers()
     {
-        foreach(CCSPlayerController player in Lib.GetAlivePlayers())
+        foreach (CCSPlayerController player in JB.Lib.GetAlivePlayers())
         {
             // reset the player colour incase of rebel
             player.SetColour(Player.DEFAULT_COLOUR);
@@ -152,7 +138,7 @@ public abstract class SDBase
 
     public void CleanupPlayers()
     {
-        foreach(CCSPlayerController player in Lib.GetAlivePlayers())
+        foreach (CCSPlayerController player in JB.Lib.GetAlivePlayers())
         {
             player.StripWeapons();
             CleanupPlayer(player);
@@ -168,27 +154,23 @@ public abstract class SDBase
     {
         int victimSlot = player.Slot;
 
-        JailPlugin.globalCtx.AddTimer(delay, () =>
+        JB.JailPlugin.globalCtx.AddTimer(delay, () =>
         {
             CCSPlayerController? target = Utilities.GetPlayerFromSlot(victimSlot);
-            if(target.IsLegal())
-            {
+            if (target.IsLegal())
                 target.Respawn();
-            }
+
         },CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
 
-        JailPlugin.globalCtx.AddTimer(delay + 0.5f,() =>
+        JB.JailPlugin.globalCtx.AddTimer(delay + 0.5f,() =>
         {
             CCSPlayerController? target = Utilities.GetPlayerFromSlot(victimSlot);
 
-            if(state == SDState.ACTIVE && target.IsLegalAlive())
-            {
+            if (state == SDState.ACTIVE && target.IsLegalAlive())
                 SetupPlayer(target);
-            }
 
         },CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
     }
-
 
     public int bossSlot = -1;
     public int riggedSlot = -1;

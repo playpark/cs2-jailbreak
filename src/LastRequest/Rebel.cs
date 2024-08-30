@@ -1,22 +1,7 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Core.Translations;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.DependencyInjection;
-using System.Globalization;
+using JB;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
-using System.Drawing;
 
 public partial class LastRequest
 {
@@ -27,12 +12,10 @@ public partial class LastRequest
 
     public void RebelGuns(CCSPlayerController player, ChatMenuOption option)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        if(!CanRebel() || rebelType != RebelType.NONE)
+        if (!CanRebel() || rebelType != RebelType.NONE)
         {
             player.LocalizePrefix(LR_PREFIX,"lr.rebel_last");
             return;
@@ -40,7 +23,7 @@ public partial class LastRequest
 
         Weapon.GunMenuGive(player,option);
     
-        player.SetHealth(Lib.AliveCtCount() * 100);
+        player.SetHealth(JB.Lib.AliveCtCount() * 100);
 
         rebelType = RebelType.REBEL;
 
@@ -49,22 +32,18 @@ public partial class LastRequest
 
     public void StartRebel(CCSPlayerController? player, ChatMenuOption option)
     {
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
 
         player.GunMenuInternal(false,RebelGuns);
     }
 
     public void StartKnifeRebel(CCSPlayerController? rebel, ChatMenuOption option)
     {
-        if(!rebel.IsLegalAlive())
-        {
+        if (!rebel.IsLegalAlive())
             return;
-        }
 
-        if(!CanRebel())
+        if (!CanRebel())
         {
             rebel.LocalizePrefix(LR_PREFIX,"rebel.last_alive");
             return;
@@ -75,44 +54,35 @@ public partial class LastRequest
         Chat.LocalizeAnnounce(LR_PREFIX,"lr.knife_rebel",rebel.PlayerName);
         rebel.SetHealth(Lib.AliveCtCount() * 100);
 
-        foreach(CCSPlayerController? player in Lib.GetPlayers())
+        foreach (CCSPlayerController? player in JB.Lib.GetPlayers())
         {
-            if(player.IsLegalAlive())
-            {
+            if (player.IsLegalAlive())
                 player.StripWeapons();
-            }
         }
     }
 
     public void RiotRespawn()
     {
         // riot cancelled in mean time
-        if(rebelType != RebelType.RIOT)
-        {
+        if (rebelType != RebelType.RIOT)
             return;
-        }
-
 
         Chat.LocalizeAnnounce(LR_PREFIX,"lr.riot_active");
 
-        foreach(CCSPlayerController? player in Lib.GetPlayers())
+        foreach (CCSPlayerController? player in JB.Lib.GetPlayers())
         {
-            if(!player.IsLegalAlive() && player.IsT())
-            {
+            if (!player.IsLegalAlive() && player.IsT())
                 player.Respawn();
-            }
         }
     }
 
 
     public void StartRiot(CCSPlayerController? rebel, ChatMenuOption option)
     {
-        if(!rebel.IsLegal())
-        {
+        if (!rebel.IsLegal())
             return;
-        }
 
-        if(!CanRebel())
+        if (!CanRebel())
         {
             rebel.LocalizePrefix(LR_PREFIX,"lr.rebel_last");
             return;
@@ -123,12 +93,9 @@ public partial class LastRequest
 
         Chat.LocalizeAnnounce(LR_PREFIX,"lr.riot_start");
 
-        if(JailPlugin.globalCtx != null)
-        {
-            JailPlugin.globalCtx.AddTimer(15.0f,RiotRespawn,CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
-        }
+        if (JB.JailPlugin.globalCtx != null)
+            JB.JailPlugin.globalCtx.AddTimer(15.0f,RiotRespawn,CSTimer.TimerFlags.STOP_ON_MAPCHANGE);
     }
-
 
     enum RebelType
     {
@@ -139,5 +106,4 @@ public partial class LastRequest
     };
 
     RebelType rebelType = RebelType.NONE;
-
 }

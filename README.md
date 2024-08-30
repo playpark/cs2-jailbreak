@@ -1,3 +1,25 @@
+> [!NOTE]
+> **changes**
+> * updated configs
+> * updated commands
+> * made noblock toggle instead of commands for on and off
+> * made force open & close doors into one command so it toggles, instead of two commands
+> * removed lang lines for warden commands and made a file to store all info (wardencommands.txt)
+> * removed repeating lang lines for special day start and end, made all use the same localizer
+> * cleaned up code
+> * read commits for other changes
+
+> [!IMPORTANT]
+> FORK FROM [destoer/Cs2Jailbreak](https://github.com/destoer/Cs2Jailbreak)
+
+<img src="https://github.com/user-attachments/assets/53e486cc-8da4-45ab-bc6e-eb38145aba36" height="200px"> <br>
+
+<br> <a href="https://ko-fi.com/exkludera" target="blank"><img src="https://cdn.ko-fi.com/cdn/kofi5.png" height="48px" alt="Buy Me a Coffee at ko-fi.com"></a>
+
+### old readme below
+
+<hr>
+
 # Cs2Jailbreak
 WIP Jailbreak plugin for CS2 using counterstrikesharp expect bugs
 

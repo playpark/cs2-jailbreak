@@ -1,15 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 public class LRKnife : LRBase
 {
@@ -25,12 +15,10 @@ public class LRKnife : LRBase
         weaponRestrict = "knife";
 
         // Handle options
-        switch(choice)
+        switch (choice)
         {
             case "Vanilla":
-            {
                 break;
-            }
 
             case "Low gravity":
             {
@@ -58,8 +46,6 @@ public class LRKnife : LRBase
 
         // re init the player
         if(choice == "High speed" && player.IsLegalAlive())
-        {
             player.SetVelocity(2.5f);  
-        }
     }
 }

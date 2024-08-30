@@ -1,18 +1,10 @@
 
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Admin;
+using JB;
+using CounterStrikeSharp.API.Modules.Menu;
 
 public enum SDState
 {
@@ -26,21 +18,23 @@ public enum SDState
 // not take too long to port from css
 public partial class SpecialDay
 {
+    private string CurrentSpecialDay = "none";
 
     public void EndSD(bool forced = false)
     {
-        if(activeSD != null)
+        if (activeSD != null)
         {
             JailPlugin.EndEvent();
             activeSD.EndCommon();
             activeSD = null;
-
             countdown.Kill();
 
+            Chat.LocalizeAnnounce(SPECIALDAY_PREFIX, JailPlugin.globalCtx.Localizer["specialday end", CurrentSpecialDay]);
+
             // restore all players if from a cancel
-            if(forced)
+            if (forced)
             {
-                foreach(CCSPlayerController player in Lib.GetAliveCt())
+                foreach(CCSPlayerController player in JB.Lib.GetAliveCt())
                 {
                     player.GiveWeapon("m4a1");
                     player.GiveWeapon("deagle");
@@ -55,12 +49,10 @@ public partial class SpecialDay
 
     public void SetupSD(CCSPlayerController? invoke, ChatMenuOption option)
     {
-        if(!invoke.IsLegal())
-        {
+        if (!invoke.IsLegal())
             return;
-        }
 
-        if(activeSD != null)
+        if (activeSD != null)
         {
             invoke.Announce(SPECIALDAY_PREFIX,"You cannot call two SD's at once");
             return;
@@ -68,20 +60,18 @@ public partial class SpecialDay
 
         // invoked as warden
         // reset the round counter so they can't do it again
-        if(wsdCommand)
-        {
+        if (wsdCommand)
             wsdRound = 0;
-        }
 
+        string name = option.Text!;
 
-        String name = option.Text;
-
-        switch(name)
+        switch (name)
         {
             case "Friendly fire":
             {
                 activeSD = new SDFriendlyFire();
                 type = SDType.FRIENDLY_FIRE;
+                CurrentSpecialDay = "Friendly fire";
                 break;
             }
 
@@ -89,6 +79,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDJuggernaut();
                 type = SDType.JUGGERNAUT;
+                CurrentSpecialDay = "Juggernaut";
                 break;             
             }
 
@@ -96,6 +87,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDTank();
                 type = SDType.TANK;
+                CurrentSpecialDay = "Tank";
                 break;                          
             }
 
@@ -103,6 +95,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDScoutKnife();
                 type = SDType.SCOUT_KNIFE;
+                CurrentSpecialDay = "Scout knife";
                 break;
             }
 
@@ -110,6 +103,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDHeadshotOnly();
                 type = SDType.HEADSHOT_ONLY;
+                CurrentSpecialDay = "Headshot only";
                 break;             
             }
 
@@ -117,6 +111,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDKnifeWarday();
                 type = SDType.KNIFE_WARDAY;
+                CurrentSpecialDay = "Knife warday";
                 break;             
             }
 
@@ -124,6 +119,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDHideAndSeek();
                 type = SDType.HIDE_AND_SEEK;
+                CurrentSpecialDay = "Hide and seek";
                 break;               
             }
 
@@ -131,6 +127,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDDodgeball();
                 type = SDType.DODGEBALL;
+                CurrentSpecialDay = "Dodgeball";
                 break;             
             }
 
@@ -138,6 +135,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDSpectre();
                 type = SDType.SPECTRE;
+                CurrentSpecialDay = "Spectre";
                 break;                            
             }
 
@@ -145,6 +143,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDGrenade();
                 type = SDType.GRENADE;
+                CurrentSpecialDay = "Grenade";
                 break;             
             }
 
@@ -152,6 +151,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDGunGame();
                 type = SDType.GUN_GAME;
+                CurrentSpecialDay = "Gun game";
                 break;                
             }
 
@@ -159,6 +159,7 @@ public partial class SpecialDay
             {
                 activeSD = new SDZombie();
                 type = SDType.ZOMBIE;
+                CurrentSpecialDay = "Zombie";
                 break;                
             }
         }
@@ -166,8 +167,10 @@ public partial class SpecialDay
         // 1up dead players
         Lib.RespawnPlayers();
 
+        Chat.LocalizeAnnounce(SPECIALDAY_PREFIX, JB.JailPlugin.globalCtx.Localizer["specialday start", CurrentSpecialDay]);
+
         // call the intiail sd setup
-        if(activeSD != null)
+        if (activeSD != null)
         {
             teamSave.Save();
 
@@ -183,10 +186,10 @@ public partial class SpecialDay
 
     public void StartSD(int unused)
     {
-        if(activeSD != null)
+        if (activeSD != null)
         {
             // force ff active
-            if(overrideFF)
+            if (overrideFF)
             {
                 Chat.LocalizeAnnounce(SPECIALDAY_PREFIX,"sd.ffd_enable");
                 Lib.EnableFriendlyFire();
@@ -197,45 +200,39 @@ public partial class SpecialDay
     }
 
     [RequiresPermissions("@css/generic")]
-    public void CancelSDCmd(CCSPlayerController? player,CommandInfo command)
+    public void CancelSDCmd(CCSPlayerController? player)
     {
         EndSD(true);
     }
 
-    public void SDCmdInternal(CCSPlayerController? player,CommandInfo command)
+    public void SDCmdInternal(CCSPlayerController? player)
     {
-        if(!Config.enableSd)
+        if (!Config.SpecialDay.Enabled)
         {
             player.Announce(SPECIALDAY_PREFIX,"Special day is disabled!");
             return;
         }
 
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        delay = 15;
+        delay = Config.SpecialDay.StartDelay;
 
-        if(Int32.TryParse(command.ArgByIndex(1),out int delayOpt))
-        {
-            delay = delayOpt;
+        ChatMenu sdMenu = new($"Specialday");
 
-            if(delayOpt > 200)
-            {
-                player.LocalizePrefix(SPECIALDAY_PREFIX, "warden.countdown_max_delay");
-                return;
-            }
-        }
+        if (Config.SpecialDay.FriendlyFire) sdMenu.AddMenuOption("Friendly fire", SetupSD);
+        if (Config.SpecialDay.Juggernaut) sdMenu.AddMenuOption("Juggernaut", SetupSD);
+        if (Config.SpecialDay.Tank) sdMenu.AddMenuOption("Tank", SetupSD);
+        if (Config.SpecialDay.Spectre) sdMenu.AddMenuOption("Spectre", SetupSD);
+        if (Config.SpecialDay.Dodgeball) sdMenu.AddMenuOption("Dodgeball", SetupSD);
+        if (Config.SpecialDay.Grenade) sdMenu.AddMenuOption("Grenade", SetupSD);
+        if (Config.SpecialDay.ScoutKnife) sdMenu.AddMenuOption("Scout knife", SetupSD);
+        if (Config.SpecialDay.HeadshotOnly) sdMenu.AddMenuOption("Hide and seek", SetupSD);
+        if (Config.SpecialDay.HeadshotOnly) sdMenu.AddMenuOption("Headshot only", SetupSD);
+        if (Config.SpecialDay.Knife) sdMenu.AddMenuOption("Knife warday", SetupSD);
+        if (Config.SpecialDay.GunGame) sdMenu.AddMenuOption("Gun game", SetupSD);
+        if (Config.SpecialDay.Zombie) sdMenu.AddMenuOption("Zombie", SetupSD);
 
-        var sdMenu = new ChatMenu("Specialday");
-
-        // Build the basic LR menu
-        for(int s = 0; s < SD_NAME.Length - 1; s++)
-        {
-            sdMenu.AddMenuOption(SD_NAME[s], SetupSD);
-        }
-        
         MenuManager.OpenChatMenu(player, sdMenu);
     }
 
@@ -243,12 +240,12 @@ public partial class SpecialDay
     [RequiresPermissions("@jail/debug")]
     public void SDRigCmd(CCSPlayerController? player,CommandInfo command)
     {
-        if(!player.IsLegal())
+        if (!player.IsLegal())
         {
             return;
         }
 
-        if(activeSD != null && activeSD.state == SDState.STARTED)
+        if (activeSD != null && activeSD.state == SDState.STARTED)
         {
             player.PrintToChat($"Rigged sd boss to {player.PlayerName}");
             activeSD.riggedSlot = player.Slot;
@@ -256,53 +253,53 @@ public partial class SpecialDay
     }   
 
     [RequiresPermissions("@css/generic")]
-    public void SDCmd(CCSPlayerController? player,CommandInfo command)
+    public void SDCmd(CCSPlayerController? player)
     {
         overrideFF = false;
         wsdCommand = false;
-        SDCmdInternal(player,command);
+        SDCmdInternal(player);
     }   
 
     [RequiresPermissions("@css/generic")]
-    public void SDFFCmd(CCSPlayerController? player,CommandInfo command)
+    public void SDFFCmd(CCSPlayerController? player)
     {
         overrideFF = true;
         wsdCommand = false;
-        SDCmdInternal(player,command);
+        SDCmdInternal(player);
     }   
 
-    public void WardenSDCmdInternal(CCSPlayerController? player,CommandInfo command)
+    public void WardenSDCmdInternal(CCSPlayerController? player)
     {
-        if(!JailPlugin.IsWarden(player))
+        if (!JailPlugin.IsWarden(player))
         {
             player.Announce(SPECIALDAY_PREFIX,"You must be a warden to use this command");
             return;
         }
 
         // Not ready yet
-        if(wsdRound < Config.wsdRound)
+        if (wsdRound < Config.SpecialDay.RoundsCooldown)
         {
-            player.Announce(SPECIALDAY_PREFIX,$"Please wait {Config.wsdRound - wsdRound} more rounds");
+            player.Announce(SPECIALDAY_PREFIX,$"Please wait {Config.SpecialDay.RoundsCooldown - wsdRound} more rounds");
             return;
         }
 
         // Go!
         wsdCommand = true;
-        SDCmdInternal(player,command);
+        SDCmdInternal(player);
     }
 
-    public void WardenSDCmd(CCSPlayerController? player,CommandInfo command)
+    public void WardenSDCmd(CCSPlayerController? player)
     {
         overrideFF = false;
 
-        WardenSDCmdInternal(player,command);
+        WardenSDCmdInternal(player);
     }   
 
-    public void WardenSDFFCmd(CCSPlayerController? player,CommandInfo command)
+    public void WardenSDFFCmd(CCSPlayerController? player)
     {
         overrideFF = true;
 
-        WardenSDCmdInternal(player,command);
+        WardenSDCmdInternal(player);
     }   
 
     public enum SDType
@@ -322,23 +319,7 @@ public partial class SpecialDay
         NONE
     };
 
-    public static String SPECIALDAY_PREFIX = $"  {ChatColors.Green}[Special day]: {ChatColors.White}";
-
-    static String[] SD_NAME = {
-        "Friendly fire",
-        "Juggernaut",
-        "Tank",
-        "Spectre",
-        "Dodgeball",
-        "Grenade",
-        "Scout knife",
-        "Hide and seek",
-        "Headshot only",
-        "Knife warday",
-        "Gun game",
-        //"Zombie",
-        "None"
-    };
+    public static string SPECIALDAY_PREFIX = $"  {ChatColors.Green}[Special day]: {ChatColors.White}";
 
     int delay = 15;
 
@@ -354,7 +335,9 @@ public partial class SpecialDay
 
     Countdown<int> countdown = new Countdown<int>();
 
+#pragma warning disable CS0414 // The field 'SpecialDay.type' is assigned but its value is never used
     SDType type = SDType.NONE;
+#pragma warning restore CS0414 // The field 'SpecialDay.type' is assigned but its value is never used
 
     public JailConfig Config = new JailConfig();
 

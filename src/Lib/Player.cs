@@ -1,20 +1,8 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Runtime.InteropServices;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Admin;
 using System.Drawing;
-using System.Text;
 using System.Diagnostics.CodeAnalysis;
 
 public static class Player
@@ -26,18 +14,16 @@ public static class Player
 
     public static readonly Color DEFAULT_COLOUR = Color.FromArgb(255, 255, 255, 255);
 
-    static public void GiveArmour(this CCSPlayerController? player)
+    static public void GiveArmor(this CCSPlayerController? player)
     {
-        if(player.IsLegalAlive())
-        {
+        if (player.IsLegalAlive())
             player.GiveNamedItem("item_assaultsuit");
-        }
     }
 
     static public void Slay(this CCSPlayerController? player)
     {
         // Why does slay now count as damage, but doesn't set the kill state fast enough?
-        if(player.IsLegalAlive() && player.GetHealth() > 0)
+        if (player.IsLegalAlive() && player.GetHealth() > 0)
         {
             player.PlayerPawn.Value?.CommitSuicide(true, true);
             player.SetHealth(0);
@@ -75,7 +61,6 @@ public static class Player
         return player.IsLegalAlive() && player.IsT();
     }
 
-
     static public bool IsLegalAliveCT([NotNullWhen(true)] this CCSPlayerController? player)
     {
         return player.IsLegalAlive() && player.IsCt();
@@ -83,12 +68,10 @@ public static class Player
 
     static public int SlotFromName(String name)
     {
-        foreach(CCSPlayerController player in Lib.GetPlayers())
+        foreach (CCSPlayerController player in JB.Lib.GetPlayers())
         {
-            if(player.PlayerName == name)
-            {
+            if (player.PlayerName == name)
                 return player.Slot;
-            }
         }
 
         return -1;
@@ -96,10 +79,8 @@ public static class Player
 
     static public CCSPlayerPawn? Pawn(this CCSPlayerController? player)
     {
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return null;
-        }
 
         CCSPlayerPawn? pawn = player.PlayerPawn.Value;
 
@@ -110,7 +91,7 @@ public static class Player
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn != null)
+        if (pawn != null)
         {
             pawn.Health = hp;
             Utilities.SetStateChanged(pawn,"CBaseEntity","m_iHealth");
@@ -121,10 +102,8 @@ public static class Player
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn == null)
-        {
+        if (pawn == null)
             return 0;
-        }
 
         return pawn.Health;
     }
@@ -143,32 +122,25 @@ public static class Player
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn != null)
-        {
+        if (pawn != null)
             pawn.MoveType = type;
-        }
     }
 
     static public void SetGravity(this CCSPlayerController? player, float value)
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn != null)
-        {
+        if (pawn != null)
             pawn.GravityScale = value;
-        }
     }
 
     static public void SetVelocity(this CCSPlayerController? player, float value)
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn != null)
-        {
+        if (pawn != null)
             pawn.VelocityModifier = value;
-        }
     }
-
 
     static public void SetArmour(this CCSPlayerController? player, int hp)
     {
@@ -183,59 +155,70 @@ public static class Player
     static public void StripWeapons(this CCSPlayerController? player, bool removeKnife = false)
     {
         // only care if player is valid
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
 
         player.RemoveWeapons();
         
         // dont remove knife its buggy
-        if(!removeKnife)
-        {
+        if (!removeKnife)
             player.GiveWeapon("knife");
-        }
     }
 
     static public void SetColour(this CCSPlayerController? player, Color colour)
     {
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn != null && player.IsLegalAlive())
+        if (pawn != null && player.IsLegalAlive())
         {
             pawn.RenderMode = RenderMode_t.kRenderTransColor;
             pawn.Render = colour;
             Utilities.SetStateChanged(pawn,"CBaseModelEntity","m_clrRender");
+
+            var activeWeapon = pawn!.WeaponServices?.ActiveWeapon.Value;
+            if (activeWeapon != null && activeWeapon.IsValid)
+            {
+                activeWeapon.Render = colour;
+                Utilities.SetStateChanged(activeWeapon, "CBaseModelEntity", "m_clrRender");
+            }
+
+            var myWeapons = pawn!.WeaponServices?.MyWeapons;
+            if (myWeapons != null)
+            {
+                foreach (var gun in myWeapons)
+                {
+                    var weapon = gun.Value;
+                    if (weapon != null)
+                    {
+                        weapon.Render = colour;
+                        Utilities.SetStateChanged(weapon, "CBaseModelEntity", "m_clrRender");
+                    }
+                }
+            }
         }
     }
 
     static public bool IsVip(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return false;
-        }
 
-        return AdminManager.PlayerHasPermissions(player,new String[] {"@css/vip"});
+        return AdminManager.PlayerHasPermissions(player,new String[] {"@css/reservation"});
     }
 
 
     static public bool IsGenericAdmin(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return false;
-        }
 
         return AdminManager.PlayerHasPermissions(player,new String[] {"@css/generic"});
     }
 
     static public void PlaySound(this CCSPlayerController? player, String sound)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         player.ExecuteClientCommand($"play {sound}");
     }
@@ -250,10 +233,8 @@ public static class Player
 
     static public void ListenAll(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         player.VoiceFlags |= VoiceFlags.ListenAll;
         player.VoiceFlags &= ~VoiceFlags.ListenTeam;
@@ -261,10 +242,8 @@ public static class Player
 
     static public void ListenTeam(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         player.VoiceFlags &= ~VoiceFlags.ListenAll;
         player.VoiceFlags |= VoiceFlags.ListenTeam;
@@ -272,25 +251,19 @@ public static class Player
 
     static public void Mute(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         // admins cannot be muted by the plugin
-        if(!player.IsGenericAdmin())
-        {
+        if (!player.IsGenericAdmin())
             player.VoiceFlags |= VoiceFlags.Muted;
-        }
     }
 
     // TODO: this needs to be hooked into the ban system that becomes used
     static public void UnMute(this CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         player.VoiceFlags &= ~VoiceFlags.Muted;
     }
@@ -298,31 +271,22 @@ public static class Player
 
     public static void RestoreHP(this CCSPlayerController? player, int damage, int health)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         // TODO: why does this sometimes mess up?
-        if(health < 100)
-        {
+        if (health < 100)
             player.SetHealth(Math.Min(health + damage,100));
-        }
 
-        else
-        {
-            player.SetHealth(health + damage);
-        }
+        else player.SetHealth(health + damage);
     }
 
     public static Vector? EyeVector(this CCSPlayerController? player)
     {
         var pawn = player.Pawn();
 
-        if(pawn == null)
-        {
+        if (pawn == null)
             return null;
-        }
 
         QAngle eyeAngle = pawn.EyeAngles;
 
@@ -340,18 +304,13 @@ public static class Player
     {
         var player = Utilities.GetPlayerFromSlot(slot);
 
-        if(player.IsLegal())
-        {
+        if (player.IsLegal())
             player.Respawn();
-        }
     }
 
     static public void Nuke()
     {
-        foreach(CCSPlayerController target in Lib.GetPlayers())
-        {
+        foreach(CCSPlayerController target in JB.Lib.GetPlayers())
             target.Slay();
-        }  
     }
-
 }

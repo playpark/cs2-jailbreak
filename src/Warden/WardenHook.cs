@@ -1,24 +1,7 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Core.Translations;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.DependencyInjection;
-using System.Globalization;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using System.Drawing;
-
 
 public partial class Warden
 {
@@ -28,7 +11,7 @@ public partial class Warden
         Server.ExecuteCommand("mp_autoteambalance 0");
         Server.ExecuteCommand("sv_human_autojoin_team 2");
 
-        if(Config.stripSpawnWeapons)
+        if (Config.Settings.StripSpawnWeapons)
         {
             Server.ExecuteCommand("mp_equipment_reset_rounds 1");
             Server.ExecuteCommand("mp_t_default_secondary \"\" ");
@@ -47,10 +30,8 @@ public partial class Warden
         block.RoundStart();
         warday.RoundStart();
 
-        foreach(CCSPlayerController player in Lib.GetPlayers())
-        {
+        foreach (CCSPlayerController player in JB.Lib.GetPlayers())
             player.SetColour(Color.FromArgb(255, 255, 255, 255));
-        }
 
         SetWardenIfLast();
     /*
@@ -90,10 +71,8 @@ public partial class Warden
 
     public void Connect(CCSPlayerController? player)
     {
-        if(player != null)
-        {
+        if (player != null)
             jailPlayers[player.Slot].Reset();
-        }
 
         mute.Connect(player);
     }
@@ -103,7 +82,6 @@ public partial class Warden
         RemoveIfWarden(player);
     }
 
-
     public void MapStart()
     {
         SetupCvar();
@@ -112,33 +90,23 @@ public partial class Warden
 
     public void Voice(CCSPlayerController? player)
     {
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
 
-        if(!Config.wardenOnVoice)
-        {
+        if (!Config.Guard.Warden.OnVoice)
             return;
-        }
 
-        if(wardenSlot == INAVLID_SLOT && player.IsCt())
-        {
+        if (wardenSlot == INAVLID_SLOT && player.IsCt())
             SetWarden(player.Slot);
-        }
     }
 
     public void Spawn(CCSPlayerController? player)
     {
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
 
-        if(player.IsCt() && ctHandicap)
-        {
+        if (player.IsCt() && ctHandicap)
             player.SetHealth(130);
-        }
 
         SetupPlayerGuns(player);
 
@@ -154,12 +122,10 @@ public partial class Warden
     public void Death(CCSPlayerController? player, CCSPlayerController? killer)
     {
         // player is no longer on server
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        if(Config.wardenForceRemoval)
+        if (Config.Guard.Warden.ForceRemoval)
         {
             // handle warden death
             RemoveIfWarden(player);
@@ -170,26 +136,22 @@ public partial class Warden
 
         var jailPlayer = JailPlayerFromPlayer(player);
 
-        if(jailPlayer != null)
+        if (jailPlayer != null)
         {
             jailPlayer.RebelDeath(player,killer);
+            jailPlayer.FreedayDeath(player,killer);
         }
-
         // if a t dies we dont need to regive the warden
-        if(player.IsCt())
-        {
+        if (player.IsCt())
             SetWardenIfLast(true);
-        }
     }
 
     public void PlayerHurt(CCSPlayerController? player, CCSPlayerController? attacker, int damage,int health)
     {
         var attackerJailPlayer = JailPlayerFromPlayer(attacker);
 
-        if(attackerJailPlayer != null)
-        {  
+        if (attackerJailPlayer != null)
             attackerJailPlayer.PlayerHurt(player,attacker,damage, health);
-        }  
     }
 
     public void WeaponFire(CCSPlayerController? player, String name)
@@ -197,10 +159,7 @@ public partial class Warden
         // attempt to set rebel
         var jailPlayer = JailPlayerFromPlayer(player);
 
-        if(jailPlayer != null)
-        {
+        if (jailPlayer != null)
             jailPlayer.RebelWeaponFire(player,name);
-        }
     }
-
 }

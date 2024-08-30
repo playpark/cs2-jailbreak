@@ -1,22 +1,13 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Runtime.InteropServices;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API.Modules.Admin;
 using System.Drawing;
-using System.Text;
-using System.Diagnostics.CodeAnalysis;
 
+namespace JB;
 
 public static class Lib
 {
@@ -28,63 +19,51 @@ public static class Lib
     static public void InvokePlayerMenu(CCSPlayerController? invoke, String name,
         Action<CCSPlayerController, ChatMenuOption> callback, Func<CCSPlayerController?,bool> filter)
     {
-        if(!invoke.IsLegal())
-        {
+        if (!invoke.IsLegal())
             return;
-        }
 
-        var menu = new ChatMenu(name);
+        ChatMenu menu = new("Warden Menu");
 
-        foreach(var player in Lib.GetPlayers())
+        foreach (var player in Lib.GetPlayers())
         {
-            if(filter(player))
-            {
+            if (filter(player))
                 menu.AddMenuOption(player.PlayerName, callback);
-            }
         }
 
-        MenuManager.OpenChatMenu(invoke, menu); 
+        MenuManager.OpenChatMenu(invoke, menu);
     }
 
     public static void ColourMenu(CCSPlayerController? player,Action<CCSPlayerController, ChatMenuOption> callback, String name)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        var colourMenu = new ChatMenu(name);
+        ChatMenu colourMenu = new(name);
 
-        foreach(var item in Lib.COLOUR_CONFIG_MAP)
-        {
+        foreach (var item in Lib.COLOUR_CONFIG_MAP)
             colourMenu.AddMenuOption(item.Key, callback);
-        }
 
         MenuManager.OpenChatMenu(player, colourMenu);    
     }
 
     static public void PlaySoundAll(String sound)
     {
-        foreach(CCSPlayerController? player in Lib.GetPlayers())
-        {
+        foreach (CCSPlayerController? player in Lib.GetPlayers())
             player.PlaySound(sound);
-        }
     }
 
     static public void MuteT()
     {
-        foreach(CCSPlayerController player in Lib.GetPlayers())
+        foreach (CCSPlayerController player in Lib.GetPlayers())
         {
-            if(player.IsT() && !player.IsVip())
-            {
+            if (player.IsT() && !player.IsVip())
                 player.Mute();
-            }
         }
     }
 
     static public void KillTimer(ref CSTimer.Timer? timer)
     {
-        if(timer != null)
+        if (timer != null)
         {
             timer.Kill();
             timer = null;
@@ -93,12 +72,10 @@ public static class Lib
 
     static public void UnMuteAll(bool roundEnd = false)
     {
-        foreach(CCSPlayerController player in Lib.GetPlayers())
+        foreach (CCSPlayerController player in Lib.GetPlayers())
         {
-            if(player.IsLegalAlive() || roundEnd)
-            {
+            if (player.IsLegalAlive() || roundEnd)
                 player.UnMute();
-            }
         }
     }
 
@@ -107,47 +84,50 @@ public static class Lib
         return DateTimeOffset.Now.ToUnixTimeSeconds();
     }
 
-
     static public void EnableFriendlyFire()
     {
-        if(ff != null)
-        {
+        if (ff != null)
             ff.SetValue(true);
-        }
     }
 
     static public void DisableFriendlyFire()
     {
-        if(ff != null)
-        {
+        if (ff != null)
             ff.SetValue(false);
-        }
     }
 
     static public void SwapAllT()
     {
-        foreach(var player in GetAlivePlayers())
-        {
+        foreach (var player in GetAlivePlayers())
             player.SwitchTeam(CsTeam.Terrorist);
-        }
     }
 
     static public void SwapAllCT()
     {
-        foreach(var player in GetAlivePlayers())
-        {
+        foreach (var player in GetAlivePlayers())
             player.SwitchTeam(CsTeam.CounterTerrorist);
-        }
     }
 
     static public void RespawnPlayers()
     {
         // 1up all dead players
-        foreach(CCSPlayerController player in Lib.GetActivePlayers())
+        foreach (CCSPlayerController player in Lib.GetActivePlayers())
         {
-            if(!player.IsLegalAlive())
-            {
+            if (!player.IsLegalAlive())
                 player.Respawn();
+        }
+    }
+
+    static public void ColorAllPlayerModels(Color color)
+    {
+        foreach (var prop in Utilities.GetAllEntities().Where(p => p.DesignerName.StartsWith("prop_dynamic")))
+        {
+            var model = prop.EntityHandle.Value!.As<CDynamicProp>();
+            if (model.IsValid)
+            {
+                model.RenderMode = RenderMode_t.kRenderTransColor;
+                model.Render = color;
+                Utilities.SetStateChanged(model, "CBaseModelEntity", "m_clrRender");
             }
         }
     }
@@ -206,28 +186,22 @@ public static class Lib
 
     static public bool BlockEnabled()
     {
-        if(blockCvar != null)
-        {
+        if (blockCvar != null)
             return blockCvar.GetPrimitiveValue<int>() == 1;
-        }
 
         return true;
     }
 
     static public void BlockAll()
     {
-        if(blockCvar != null)
-        {
+        if (blockCvar != null)
             blockCvar.SetValue(1);
-        }
     }
 
     static public void UnBlockAll()
     {
-        if(blockCvar != null)
-        {
+        if (blockCvar != null)
             blockCvar.SetValue(0);
-        }
     }
 
     
@@ -237,10 +211,8 @@ public static class Lib
         
         ConVar? cvar = ConVar.Find(name);
 
-        if(cvar != null)
-        {
+        if (cvar != null)
             cvar.StringValue = value;
-        }
     }
 
     static public bool IsActiveTeam(int team)
@@ -255,6 +227,7 @@ public static class Lib
     }
 
 
+    public static readonly Color WHITE = Color.FromArgb(255, 255, 255, 255);
     public static readonly Color CYAN = Color.FromArgb(255, 153, 255, 255);
     public static readonly Color RED = Color.FromArgb(255, 255, 0, 0);
     public static readonly Color INVIS = Color.FromArgb(0, 255, 255, 255);
@@ -262,6 +235,7 @@ public static class Lib
 
     public static readonly Dictionary<string,Color> COLOUR_CONFIG_MAP = new Dictionary<string,Color>()
     {
+        {"White",Lib.WHITE}, // white
         {"Cyan",Lib.CYAN}, // cyan
         {"Pink",Color.FromArgb(255,255,192,203)} , // pink
         {"Red",Lib.RED}, // red

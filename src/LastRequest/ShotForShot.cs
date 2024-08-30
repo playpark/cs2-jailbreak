@@ -1,15 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 // NOTE: this also implements Mag for Mag
 
@@ -23,7 +13,7 @@ public class LRShotForShot : LRBase
     public override void InitPlayer(CCSPlayerController player)
     {   
         // NOTE: clip size assumes mag for mag
-        switch(choice)
+        switch (choice)
         {
             case "Deagle":
             {
@@ -65,22 +55,15 @@ public class LRShotForShot : LRBase
         }
         
         // override to 1 if shot for shot
-        if(!magForMag)
-        {
+        if (!magForMag)
             clipSize = 1;
-        }
 
         player.GiveWeapon("" + weaponRestrict);
 
-
-
         var deagle = player.FindWeapon("weapon_" + weaponRestrict);
 
-        if(deagle != null)
-        {
+        if (deagle != null)
             deagle.SetAmmo(0,0);
-        } 
-
     }
 
     void PickClip()
@@ -91,7 +74,7 @@ public class LRShotForShot : LRBase
 
 
         // Give the lucky player the first shot
-        if(winner != null && loser != null && winnerLR != null)
+        if (winner != null && loser != null && winnerLR != null)
         {
             winner.Announce(LastRequest.LR_PREFIX,$"Randomly chose {winner.PlayerName} to shoot first");
             loser.Announce(LastRequest.LR_PREFIX,$"Randomly chose {winner.PlayerName} to shoot first");
@@ -107,26 +90,22 @@ public class LRShotForShot : LRBase
 
     public override void WeaponFire(String name)
     {
-        if(name.Contains(weaponRestrict))
-        {
+        if (name.Contains(weaponRestrict))
             fire_clip();
-        }
     }
 
     void ReloadClip()
     {
         CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
-        if(player.IsLegalAlive())
+        if (player.IsLegalAlive())
         {     
             player.PrintToChat($"{LastRequest.LR_PREFIX} Reload!");
 
             var deagle = player.FindWeapon("weapon_" + weaponRestrict);
 
-            if(deagle != null)
-            {
+            if (deagle != null)
                 deagle.SetAmmo(clipSize,0);
-            } 
 
             curClip = clipSize;
         }          
@@ -134,16 +113,14 @@ public class LRShotForShot : LRBase
 
     void fire_clip()
     {
-        if(curClip <= 0)
-        {
+        if (curClip <= 0)
             return;
-        }
 
         curClip -= 1;
 
         //Server.PrintToChatAll($"Fired {curClip}");
 
-        if(curClip <= 0 && partner != null)
+        if (curClip <= 0 && partner != null)
         {
             var lrShot = (LRShotForShot)partner; 
             lrShot.ReloadClip();

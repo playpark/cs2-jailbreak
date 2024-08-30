@@ -1,16 +1,5 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 
 public class Warday
 {
@@ -18,15 +7,13 @@ public class Warday
     {
         // if warday is no longer active dont allow guns
 
-        if(wardayActive)
+        if (wardayActive)
         {
-            if(Config.wardayGuns)
+            if (Config.Settings.WardayGuns)
             {
                 // give T guns
-                foreach(CCSPlayerController player in Lib.GetAliveT())
-                {
+                foreach(CCSPlayerController player in JB.Lib.GetAliveT())
                     player.EventGunMenu();
-                }
             }
 
             Entity.ForceOpen();
@@ -37,27 +24,24 @@ public class Warday
 
     public bool StartWarday(String location, int delay)
     {
-        if(roundCounter >= ROUND_LIMIT)
+        if (roundCounter >= ROUND_LIMIT)
         {
             // must wait again to start a warday
             roundCounter = 0;
 
             wardayActive = true;
-            JailPlugin.StartEvent();
+            JB.JailPlugin.StartEvent();
             
             Entity.ForceClose();
 
-            if(Config.wardayGuns)
+            if (Config.Settings.WardayGuns)
             {
-                foreach(CCSPlayerController player in Lib.GetPlayers())
+                foreach(CCSPlayerController player in JB.Lib.GetPlayers())
                 {
-                    if(player.IsLegal() && player.IsCt())
-                    {
+                    if (player.IsLegal() && player.IsCt())
                         player.EventGunMenu();
-                    }
                 }
             }
-
 
             countdown.Start(Chat.Localize("warday.location",location),delay,0,null,gun_callback);
             return true;
@@ -71,7 +55,6 @@ public class Warday
         countdown.Kill();
     }
 
-
     public void RoundStart()
     {
         // one less round till a warday can be called
@@ -80,7 +63,7 @@ public class Warday
         countdown.Kill();
 
         wardayActive = false;
-        JailPlugin.EndEvent();
+        JB.JailPlugin.EndEvent();
     }
 
     public void MapStart()

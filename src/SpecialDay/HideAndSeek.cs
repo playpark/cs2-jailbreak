@@ -1,16 +1,5 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using JB;
 using System.Drawing;
 
 
@@ -18,18 +7,19 @@ public class SDHideAndSeek : SDBase
 {
     public override void Setup()
     {
-        LocalizeAnnounce("sd.hide_start");
         LocalizeAnnounce("sd.t_hide",delay);
+        Lib.ColorAllPlayerModels(Color.FromArgb(100, 255, 255, 255));
     }
 
     public override void Start()
     {
         // unfreeze all players
-        foreach(CCSPlayerController? player in Lib.GetAlivePlayers())
+        foreach (CCSPlayerController? player in Lib.GetAlivePlayers())
         {
-            if(player.IsT())
+            if (player.IsT())
             {
                 player.GiveWeapon("knife");
+                player.SetColour(Color.FromArgb(100, 255, 255, 255));
             }
 
             player.UnFreeze();
@@ -40,13 +30,12 @@ public class SDHideAndSeek : SDBase
 
     public override void End()
     {
-        LocalizeAnnounce("sd.hide_end");
     }
 
     public override void SetupPlayer(CCSPlayerController player)
     {
         // lock them in place 500 hp, gun menu
-        if(player.IsCt())
+        if (player.IsCt())
         {
             player.Freeze();
             player.EventGunMenu();
@@ -56,7 +45,7 @@ public class SDHideAndSeek : SDBase
         // invis
         else
         {
-            player.SetColour(Color.FromArgb(0,0,0,0));
+            player.SetColour(Color.FromArgb(100,255,255,255));
             player.StripWeapons(true);
         }
     }

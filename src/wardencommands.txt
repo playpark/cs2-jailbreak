@@ -1,0 +1,12 @@
+!w - take warden
+!wd - start a warday
+!uw - leave warden
+!wb - enable/disable block
+!color - set prisoner colour
+!laser_color - set laser colour
+!marker_color - set marker colour
+!swap_guard <player name> - swaps a T to a guard in CT
+!wsd - Call a warden special day
+!wsd - Call a warden friendly fire special day
+!give_pardon : pardon a rebel
+!give_freeday: give a t a freeday

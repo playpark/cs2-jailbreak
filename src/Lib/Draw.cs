@@ -1,31 +1,22 @@
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using System.Drawing;
-
 
 class Line
 {
-    public void Move(Vector start, Vector end)
+    public void Move(Vector start, Vector end, float size, Color color)
     {
         if(laserIndex == -1)
-        {
-            laserIndex = Entity.DrawLaser(start,end,2.0f,colour);
-        }
+            laserIndex = Entity.DrawLaser(start, end, size, color);
 
-        else
-        {
-            Entity.MoveLaserByIndex(laserIndex,start,end);
-        }
+        else Entity.MoveLaserByIndex(laserIndex,start,end);
     }
 
     public void Destroy()
     {
-        if(laserIndex != -1)
+        if (laserIndex != -1)
         {
             Entity.Remove(laserIndex,"env_beam");
             laserIndex = -1;
@@ -34,7 +25,7 @@ class Line
 
     public void DestroyDelay(float life)
     {
-        if(laserIndex != -1)
+        if (laserIndex != -1)
         {
             CBaseEntity? laser = Utilities.GetEntityFromIndex<CBaseEntity>(laserIndex);
             laser.RemoveDelay(life,"env_beam");
@@ -42,7 +33,7 @@ class Line
     }
 
     int laserIndex = -1;
-    public Color colour = Lib.CYAN;
+    public Color colour = JB.Lib.CYAN;
 }
 
 
@@ -50,10 +41,8 @@ class Circle
 {
     public Circle()
     {
-        for(int l = 0; l < lines.Count(); l++)
-        {
+        for (int l = 0; l < lines.Count(); l++)
             lines[l] = new Line();
-        }
     }
 
     static Vector AngleOnCircle(float angle,float r, Vector mid)
@@ -63,7 +52,7 @@ class Circle
         return new Vector((float)(mid.X + (r * Math.Cos(angle))),(float)(mid.Y + (r * Math.Sin(angle))), mid.Z + 6.0f);
     }
 
-    public void Draw(float life, float radius,float X, float Y, float Z)
+    public void Draw(float life, float radius,float X, float Y, float Z, Color color)
     {
         Vector mid =  new Vector(X,Y,Z);
 
@@ -74,15 +63,15 @@ class Circle
         float angleOld = 0.0f;
         float angleCur = step;
 
-        for(int l = 0; l < lines.Count(); l++)
+        for (int l = 0; l < lines.Count(); l++)
         {
             Vector start = AngleOnCircle(angleOld,radius,mid);
             Vector end = AngleOnCircle(angleCur,radius,mid);
 
             // update the line colour
-            lines[l].colour = colour;
+            lines[l].colour = color;
 
-            lines[l].Move(start,end);
+            lines[l].Move(start, end, 2.0f, color);
             lines[l].DestroyDelay(life);
 
             angleOld = angleCur;
@@ -90,19 +79,16 @@ class Circle
         }
     }
 
-    public void Draw(float life, float radius,Vector vec)
+    public void Draw(float life, float radius, Vector vec, Color color)
     {
-        Draw(life,radius,vec.X,vec.Y,vec.Z);
+        Draw(life, radius, vec.X, vec.Y, vec.Z, color);
     }
 
     public void Destroy()
     {
-        for(int l = 0; l < lines.Count(); l++)
-        {
-            lines[l].Destroy();
-        }      
+        for (int l = 0; l < lines.Count(); l++)
+            lines[l].Destroy();  
     }
 
     Line[] lines = new Line[50];
-    public Color colour = Lib.CYAN;
 }

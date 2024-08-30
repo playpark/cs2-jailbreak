@@ -1,12 +1,9 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Menu;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using System.Drawing;
 using System.Diagnostics.CodeAnalysis;
+using JB;
 
 public static class Weapon
 {
@@ -15,10 +12,9 @@ public static class Weapon
         return weapon != null && weapon.IsValid;
     }
 
-
     static public void SetColour(this CBasePlayerWeapon? weapon, Color colour)
     {
-        if(weapon.IsLegal())
+        if (weapon.IsLegal())
         {
             weapon.RenderMode = RenderMode_t.kRenderTransColor;
             weapon.Render = colour;
@@ -29,51 +25,37 @@ public static class Weapon
     static public CBasePlayerWeapon? FindWeapon(this CCSPlayerController? player, String name)
     {
         // only care if player is alive
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return null;
-        }
 
         CCSPlayerPawn? pawn = player.Pawn();
 
-        if(pawn == null)
-        {
+        if (pawn == null)
             return null;
-        }
 
         var weapons = pawn.WeaponServices?.MyWeapons;
 
-        if(weapons == null)
-        {
+        if (weapons == null)
             return null;
-        }
 
         foreach (var weaponOpt in weapons)
         {
             CBasePlayerWeapon? weapon = weaponOpt.Value;
 
-            if(weapon == null)
-            {
+            if (weapon == null)
                 continue;
-            }
          
-            if(weapon.DesignerName.Contains(name))
-            {
+            if (weapon.DesignerName.Contains(name))
                 return weapon;
-            }
         }
 
         return null;
     }
 
-
-
     static public void SetAmmo(this CBasePlayerWeapon? weapon, int clip, int reserve)
     {
-        if(!weapon.IsLegal())
-        {
+        if (!weapon.IsLegal())
             return;
-        }
 
         // overide reserve max so it doesn't get clipped when
         // setting "infinite ammo"
@@ -81,7 +63,7 @@ public static class Weapon
         CCSWeaponBaseVData? weaponData = weapon.As<CCSWeaponBase>().VData;
     
         
-        if(weaponData != null)
+        if (weaponData != null)
         {
             // TODO: this overide it for every gun the player has...
             // when not a map gun, this is not a big deal
@@ -92,19 +74,17 @@ public static class Weapon
                 weaponData.MaxClip1 = clip;
             }
         */
-            if(reserve > weaponData.PrimaryReserveAmmoMax)
-            {
+            if (reserve > weaponData.PrimaryReserveAmmoMax)
                 weaponData.PrimaryReserveAmmoMax = reserve;
-            }
         }
 
-        if(clip != -1)
+        if (clip != -1)
         {
             weapon.Clip1 = clip;
             Utilities.SetStateChanged(weapon,"CBasePlayerWeapon","m_iClip1");
         }
 
-        if(reserve != -1)
+        if (reserve != -1)
         {
             weapon.ReserveAmmo[0] = reserve;
             Utilities.SetStateChanged(weapon,"CBasePlayerWeapon","m_pReserveAmmo");
@@ -114,10 +94,8 @@ public static class Weapon
     public static void EventGunMenuCallback(CCSPlayerController player, ChatMenuOption option)
     {
         // Event has been cancelled in the mean time dont give any guns
-        if(!JailPlugin.EventActive())
-        {
+        if (!JB.JailPlugin.EventActive())
             return;
-        }
 
         GunMenuGive(player,option);
     }
@@ -125,29 +103,25 @@ public static class Weapon
     static public void EventGunMenu(this CCSPlayerController? player)
     {
         // Event has been cancelled in the mean time dont give any guns
-        if(!JailPlugin.EventActive())
-        {
+        if (!JB.JailPlugin.EventActive())
             return;
-        }
 
         player.GunMenuInternal(false,EventGunMenuCallback);
     }
 
     public static void GunMenuGive(this CCSPlayerController player, ChatMenuOption option)
     {
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        }
 
         player.StripWeapons();
 
-        player.GiveMenuWeapon(option.Text);
+        player.GiveMenuWeapon(option.Text!);
         player.GiveWeapon("deagle");
 
-        player.GiveArmour();
+        player.GiveArmor();
 
-        CBasePlayerWeapon? primary = player.FindWeapon(GUN_LIST[option.Text]);
+        CBasePlayerWeapon? primary = player.FindWeapon(GUN_LIST[option.Text!]);
         primary.SetAmmo(-1,999);
 
         CBasePlayerWeapon? secondary = player.FindWeapon("deagle");
@@ -156,10 +130,8 @@ public static class Weapon
 
     static void GiveMenuWeaponCallback(this CCSPlayerController player, ChatMenuOption option)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
         GunMenuGive(player,option);
     }
@@ -189,10 +161,8 @@ public static class Weapon
 
     static public void GiveWeapon(this CCSPlayerController? player,String name)
     {
-        if(player.IsLegalAlive())
-        {
+        if (player.IsLegalAlive())
             player.GiveNamedItem("weapon_" + name);
-        }
     }
 
 
@@ -204,22 +174,17 @@ public static class Weapon
     static public void GunMenuInternal(this CCSPlayerController? player, bool no_awp, Action<CCSPlayerController, ChatMenuOption> callback)
     {
         // player must be alive and active!
-        if(!player.IsLegalAlive())
-        {
+        if (!player.IsLegalAlive())
             return;
-        } 
 
-    
-        var gunMenu = new ChatMenu("Gun Menu");
+        ChatMenu gunMenu = new("Gun Menu");
 
-        foreach(var weapon_pair in GUN_LIST)
+        foreach (var weapon_pair in GUN_LIST)
         {
             var weapon_name = weapon_pair.Key;
 
-            if(no_awp && weapon_name == "awp")
-            {
+            if (no_awp && weapon_name == "awp")
                 continue;
-            }
 
             gunMenu.AddMenuOption(weapon_name, callback);
         }
@@ -230,7 +195,7 @@ public static class Weapon
     static public void GunMenu(this CCSPlayerController? player, bool no_awp)
     {
         // give bots some test guns
-        if(player.IsLegalAlive() && player.IsBot)
+        if (player.IsLegalAlive() && player.IsBot)
         {
             player.GiveWeapon("ak47");
             player.GiveWeapon("deagle");

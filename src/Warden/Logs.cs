@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Admin;
 
@@ -18,19 +17,17 @@ public class Logs
     }
 
     [RequiresPermissions("@css/generic")]
-    public void LogsCommand(CCSPlayerController? executor, CommandInfo info)
+    public void LogsCommand(CCSPlayerController? executor)
     {
         printLogs(executor);
     }
 
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
-        foreach (CCSPlayerController player in Lib.GetPlayers())
+        foreach (CCSPlayerController player in JB.Lib.GetPlayers())
         {
             if (!player.IsBot)
-            {
                 printLogs(player);
-            }
         }
         logs.Clear();
         return HookResult.Continue;
@@ -100,9 +97,9 @@ public class Logs
             case CsTeam.Spectator:
                 return plugin.Localizer["role.spectator"];
             case CsTeam.CounterTerrorist:
-                return plugin.Localizer[JailPlugin.warden.IsWarden(player) ? "role.warden" : "role.guard"];
+                return plugin.Localizer[JB.JailPlugin.warden.IsWarden(player) ? "role.warden" : "role.guard"];
             case CsTeam.Terrorist:
-                return plugin.Localizer[JailPlugin.warden.jailPlayers[player.Slot].IsRebel ? "role.rebel" : "role.prisoner"];
+                return plugin.Localizer[JB.JailPlugin.warden.jailPlayers[player.Slot].isRebel(player) ? "role.rebel" : "role.prisoner"];
             default:
                 return plugin.Localizer["role.unknown"];
         }

@@ -1,21 +1,8 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Core.Translations;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.DependencyInjection;
-using System.Globalization;
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using JB;
 using System.Drawing;
 
 public partial class Warden
@@ -30,16 +17,13 @@ public partial class Warden
         JailPlayer? jailPlayer = JailPlayerFromPlayer(player);
 
         // draw marker
-        if(IsWarden(player) && player.IsLegal() && jailPlayer != null)
+        if (IsWarden(player) && player.IsLegal() && jailPlayer != null)
         {
             // make sure we destroy the old marker
             // because this generates alot of ents
             RemoveMarker();
 
-            //Server.PrintToChatAll($"{Lib.EntCount()}");
-
-            marker.colour = jailPlayer.markerColour;
-            marker.Draw(60.0f,75.0f,x,y,z);
+            marker.Draw(60.0f, 75.0f, x, y, z, jailPlayer.markerColour);
         }
     }
 
@@ -50,22 +34,16 @@ public partial class Warden
 
     public void LaserTick()
     {
-        if(!Config.wardenLaser)
-        {
+        if (!Config.Guard.Warden.Laser)
             return;
-        }
 
-        if(wardenSlot == INAVLID_SLOT)
-        {
+        if (wardenSlot == INAVLID_SLOT)
             return;
-        }
 
         CCSPlayerController? warden = Utilities.GetPlayerFromSlot(wardenSlot);
 
-        if(!warden.IsLegalAliveCT())
-        {
+        if (!warden.IsLegalAliveCT())
             return;
-        }
 
         bool useKey = (warden.Buttons & PlayerButtons.Use) == PlayerButtons.Use;
 
@@ -74,17 +52,14 @@ public partial class Warden
 
         JailPlayer? jailPlayer = JailPlayerFromPlayer(warden);
 
-        if(pawn != null && pawn.AbsOrigin != null && camera != null && useKey && jailPlayer != null)
+        if (pawn != null && pawn.AbsOrigin != null && camera != null && useKey && jailPlayer != null)
         {
             Vector eye = new Vector(pawn.AbsOrigin.X,pawn.AbsOrigin.Y,pawn.AbsOrigin.Z + camera.OldPlayerViewOffsetZ);
 
             Vector? eyeVector = warden.EyeVector();
 
-
-            if(eyeVector == null)
-            {
+            if (eyeVector == null)
                 return;
-            }
 
             // scale out to an arbitary length
             eyeVector = Vec.Scale(eyeVector,3000);
@@ -98,66 +73,51 @@ public partial class Warden
             */
 
             laser.colour = jailPlayer.laserColour;
-            laser.Move(eye,end);
+            laser.Move(eye, end, 2.0f, laser.colour);
         }
 
         // hide laser
-        else
-        {
-            RemoveLaser();
-        }
+        else RemoveLaser();
     }
 
     void SetLaser(CCSPlayerController player, ChatMenuOption option)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        var text = option.Text;
+        var text = option.Text!;
         JailPlayer? jailPlayer = JailPlayerFromPlayer(player);
 
-        if(jailPlayer != null)
-        {
+        if (jailPlayer != null)
             jailPlayer.SetLaser(player,text);
-        }
     }
 
     void SetMarker(CCSPlayerController player, ChatMenuOption option)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        var text = option.Text;
+        var text = option.Text!;
         JailPlayer? jailPlayer = JailPlayerFromPlayer(player);
 
-        if(jailPlayer != null)
-        {
+        if (jailPlayer != null)
             jailPlayer.SetMarker(player,text);
-        }
     }
 
-    public void LaserColourCmd(CCSPlayerController? player, CommandInfo command)
+    public void LaserColourCmd(CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        Lib.ColourMenu(player,SetLaser,"Laser colour");
+        JB.Lib.ColourMenu(player,SetLaser,"Laser colour");
     }
 
-    public void MarkerColourCmd(CCSPlayerController? player, CommandInfo command)
+    public void MarkerColourCmd(CCSPlayerController? player)
     {
-        if(!player.IsLegal())
-        {
+        if (!player.IsLegal())
             return;
-        }
 
-        Lib.ColourMenu(player,SetMarker,"Marker colour");
+        JB.Lib.ColourMenu(player,SetMarker,"Marker colour");
     }
 
     public static readonly float LASER_TIME = 0.1f;

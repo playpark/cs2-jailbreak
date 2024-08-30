@@ -1,48 +1,33 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Admin;
-
-using CSTimer = CounterStrikeSharp.API.Modules.Timers;
+using JB;
 
 public partial class LastRequest
 {
     bool CanStartLR(CCSPlayerController? player)
     {
         if(!player.IsLegal())
-        {
             return false;
-        }
 
         // prevent starts are round begin to stop lr activations on map joins
-        if(Lib.CurTimestamp() - startTimestamp < 15)
+        if (Lib.CurTimestamp() - startTimestamp < 15)
         {
             player.LocalizePrefix(LR_PREFIX,"lr.wait");
             return false;
         }
 
-        if(!IsValidT(player))
+        if (!IsValidT(player))
         {
             return false;
         } 
 
-        if(JailPlugin.warden.IsAliveRebel(player) && Config.rebelCantLr)
+        if (JB.JailPlugin.warden.IsAliveRebel(player) && !Config.Prisoner.LR.AllowRebel)
         {
             player.LocalizePrefix(LR_PREFIX,"lr.rebel_cant_lr");
             return false;
         }
 
-        
-        if(Lib.AliveTCount() > activeLR.Length)
+        if (Lib.AliveTCount() > activeLR.Length)
         {
             player.LocalizePrefix(LR_PREFIX,"lr.too_many",activeLR.Length);
             return false;
@@ -56,12 +41,10 @@ public partial class LastRequest
         // called from pick_parter -> finalise the type struct
         LRChoice? choice = ChoiceFromPlayer(player);
 
-        if(choice == null)
-        {
+        if (choice == null)
             return;
-        }
-        
-        String name = option.Text;
+
+        string name = option.Text!;
 
         choice.ctSlot = Player.SlotFromName(name);
 
@@ -71,7 +54,7 @@ public partial class LastRequest
 
     public void PickedOption(CCSPlayerController? player, ChatMenuOption option)
     {
-        PickPartnerInternal(player,option.Text);
+        PickPartnerInternal(player,option.Text!);
     }
 
     public void PickOption(CCSPlayerController? player, ChatMenuOption option)
@@ -80,21 +63,19 @@ public partial class LastRequest
         // save type
         LRChoice? choice = ChoiceFromPlayer(player);
 
-        if(choice == null || !player.IsLegal())
-        {
+        if (choice == null || !player.IsLegal())
             return;
-        }
 
-        choice.type = TypeFromName(option.Text);
+        choice.type = TypeFromName(option.Text!);
 
         String lrName = LR_NAME[(int)choice.type];
 
         // now select option
-        switch(choice.type)
+        switch (choice.type)
         {
             case LRType.KNIFE:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("Vanilla", PickedOption);
                 lrMenu.AddMenuOption("Low gravity", PickedOption);
@@ -107,7 +88,7 @@ public partial class LastRequest
 
             case LRType.DODGEBALL:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("Vanilla", PickedOption);
                 lrMenu.AddMenuOption("Low gravity", PickedOption);
@@ -118,7 +99,7 @@ public partial class LastRequest
 
             case LRType.WAR:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("XM1014", PickedOption);
                 lrMenu.AddMenuOption("M249", PickedOption);
@@ -131,7 +112,7 @@ public partial class LastRequest
 
             case LRType.NO_SCOPE:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("Awp", PickedOption);
                 lrMenu.AddMenuOption("Scout", PickedOption);
@@ -142,7 +123,7 @@ public partial class LastRequest
 
             case LRType.GRENADE:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("Vanilla", PickedOption);
                 lrMenu.AddMenuOption("Low gravity", PickedOption);
@@ -154,10 +135,10 @@ public partial class LastRequest
             case LRType.SHOT_FOR_SHOT:
             case LRType.MAG_FOR_MAG:
             {
-                var lrMenu = new ChatMenu($"Choice Menu ({lrName})");
+                ChatMenu lrMenu = new($"Choice Menu ({lrName})");
 
                 lrMenu.AddMenuOption("Deagle",PickedOption);
-                //lrMenu.AddMenuOption("Usp",PickedOption);
+                //lrMenu.Add("Usp",PickedOption);
                 lrMenu.AddMenuOption("Glock",PickedOption);
                 lrMenu.AddMenuOption("Five seven",PickedOption);
                 lrMenu.AddMenuOption("Dual Elite",PickedOption);
@@ -190,10 +171,8 @@ public partial class LastRequest
         // called from pick_choice -> pick partner
         LRChoice? choice = ChoiceFromPlayer(player);
 
-        if(choice == null || !player.IsLegal())
-        {
+        if (choice == null || !player.IsLegal())
             return;
-        }
 
         choice.option = name;
 
@@ -201,15 +180,9 @@ public partial class LastRequest
         String menuName = $"Partner Menu ({lrName})";
 
         // Debugging pick t's
-        if(choice.bypass && player.IsCt())
-        {
-            Lib.InvokePlayerMenu(player,menuName,FinaliseChoice,LegalLrPartnerT);
-        }
+        if (choice.bypass && player.IsCt())
+            JB.Lib.InvokePlayerMenu(player,menuName,FinaliseChoice,LegalLrPartnerT);
 
-        else
-        {
-            Lib.InvokePlayerMenu(player,menuName,FinaliseChoice,LegalLrPartnerCT);
-        }   
+        else JB.Lib.InvokePlayerMenu(player,menuName,FinaliseChoice,LegalLrPartnerCT);
     }
-
 }

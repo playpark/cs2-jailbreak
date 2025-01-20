@@ -337,8 +337,11 @@ public class JailPlayer
                     return;
             }
 
-            SetRebel(attacker);
-            RebelList.Add(attacker, player);
+            if (!RebelList.ContainsKey(attacker))
+            {
+                RebelList.Add(attacker, player);
+                SetRebel(attacker);
+            }
         }
         else if (attacker.IsCt())
             Chat.PrintConsoleAll($"CT {attacker.PlayerName} hit {player.PlayerName} for {damage}");

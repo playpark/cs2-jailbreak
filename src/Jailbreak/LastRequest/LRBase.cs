@@ -294,8 +294,8 @@ public abstract class LRBase
         if (v1 == null || v2 == null || v1.AbsOrigin == null || v2.AbsOrigin == null)
             return;
 
-        Vector start = v1.AbsOrigin;
-        Vector end = v2.AbsOrigin;
+        Vector start = new(v1.AbsOrigin.X, v1.AbsOrigin.Y, v1.AbsOrigin.Z);
+        Vector end = new(v2.AbsOrigin.X, v2.AbsOrigin.Y, v2.AbsOrigin.Z);
 
         // make sure it doesn't clip into the ground!
         start.Z += 3.0f;

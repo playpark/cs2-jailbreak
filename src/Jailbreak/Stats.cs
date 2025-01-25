@@ -255,7 +255,7 @@ public class JailStats
 
         // Check table size to see if we have the right number of LR's
         // if we dont make the extra tables
-        using var colCmd = new MySqlCommand("SHOW COLUMNS FROM stats",database);
+        using var colCmd = new MySqlCommand($"SHOW COLUMNS FROM {Config.Database.Table}", database);
         var colReader = colCmd.ExecuteReader();
 
         int rowCount = 0;

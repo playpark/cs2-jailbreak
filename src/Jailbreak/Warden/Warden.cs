@@ -4,6 +4,9 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using System.Drawing;
+using MySqlConnector;
+using JB;
+using CounterStrikeSharp.API.Modules.Entities;
 
 public partial class Warden
 {
@@ -36,9 +39,12 @@ public partial class Warden
         player.SetColour(Color.FromArgb(255, 0, 0, 255));
 
         JB.JailPlugin.logs.AddLocalized("warden.took_warden", player.PlayerName);
+
+        if (!wardenTime.ContainsKey(slot))
+            wardenTime.Add(slot, DateTime.UtcNow);
     }
 
-    public void RemoveWarden()
+    public async void RemoveWarden()
     {
         var player = Utilities.GetPlayerFromSlot(wardenSlot);
 
@@ -47,6 +53,15 @@ public partial class Warden
             player.SetColour(Player.DEFAULT_COLOUR);
             Chat.LocalizeAnnounce(WARDEN_PREFIX, "warden.removed", player.PlayerName);
             JB.JailPlugin.logs.AddLocalized("warden.removed", player.PlayerName);
+
+            DateTime now = DateTime.UtcNow;
+
+            int allSeconds = (int)Math.Round((now - wardenTime[player.Slot]).TotalSeconds);
+
+            if (wardenTime.ContainsKey(player.Slot))
+                wardenTime.Remove(player.Slot);
+
+            await SaveWardenTime(player.AuthorizedSteamID.SteamId2, allSeconds);
         }
 
         RemoveWardenInternal();
@@ -176,6 +191,25 @@ public partial class Warden
 
         return Utilities.GetPlayerFromSlot(wardenSlot);
     }
+
+    public static async Task SaveWardenTime(string steamID, int allSeconds)
+    {
+        if (allSeconds <= 0)
+            return;
+
+        var database = await JailPlugin.jailStats.ConnectDB();
+
+        if (database == null)
+            return;
+
+        using var sql = new MySqlCommand($"UPDATE {JailPlugin.globalCtx.Config.Database.Table} SET wardentime = wardentime + {allSeconds} WHERE steamid = @steam_id", database);
+
+        sql.Parameters.AddWithValue("@steam_id", steamID);
+
+        await sql.ExecuteNonQueryAsync();
+    }
+
+    private static Dictionary<int, DateTime> wardenTime = new Dictionary<int, DateTime>();
 
     Countdown<int> chatCountdown = new Countdown<int>();
 

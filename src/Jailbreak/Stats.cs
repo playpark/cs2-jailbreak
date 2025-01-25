@@ -250,7 +250,7 @@ public class JailStats
         }
 
         // Make sure Table exists
-        using var tableCmd = new MySqlCommand($"CREATE TABLE IF NOT EXISTS {Config.Database.Table} (steamid varchar(64) PRIMARY KEY,name varchar(64))",database);
+        using var tableCmd = new MySqlCommand($"CREATE TABLE IF NOT EXISTS {Config.Database.Table} (steamid varchar(64) PRIMARY KEY,name varchar(64), wardentime int(11) DEFAULT 0)",database);
         tableCmd.ExecuteNonQuery();
 
         // Check table size to see if we have the right number of LR's

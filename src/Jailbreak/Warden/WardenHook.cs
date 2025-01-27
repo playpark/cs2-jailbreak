@@ -33,6 +33,8 @@ public partial class Warden
         foreach (CCSPlayerController player in JB.Lib.GetPlayers())
             player.SetColour(Color.FromArgb(255, 255, 255, 255));
 
+        wardenTime.Clear();
+
         SetWardenIfLast();
     /*
         ctHandicap = ((Lib.CtCount() * 3) <= Lib.TCount()) && Config.ctHandicap;

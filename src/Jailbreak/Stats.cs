@@ -141,11 +141,22 @@ public class JailStats
 
         String name = LastRequest.LR_NAME[(int)type].Replace(" ","_");
 
-        if (win) name += "_win";
-        else name += "_loss";
+        name += (win ? "_win" : "_loss");
 
-        using var incStat = new MySqlCommand($"UPDATE {Config.Database.Table} SET {name} = {name} + 1 WHERE steamid = @steam_id",database);
-        incStat.Parameters.AddWithValue("@steam_id",steamID);
+        string query = $@"
+            UPDATE {Config.Database.Table}
+            SET
+                {name} = {name} + 1,
+                lr_wins = lr_wins + @win_increment,
+                lr_losses = lr_losses + @loss_increment
+            WHERE steamid = @steam_id";
+
+        using var incStat = new MySqlCommand(query, database);
+
+        // Assign parameter values
+        incStat.Parameters.AddWithValue("@steam_id", steamID);
+        incStat.Parameters.AddWithValue("@win_increment", win ? 1 : 0);
+        incStat.Parameters.AddWithValue("@loss_increment", win ? 0 : 1);
 
         try 
         {
@@ -250,7 +261,7 @@ public class JailStats
         }
 
         // Make sure Table exists
-        using var tableCmd = new MySqlCommand($"CREATE TABLE IF NOT EXISTS {Config.Database.Table} (steamid varchar(64) PRIMARY KEY,name varchar(64), wardentime int(11) DEFAULT 0)",database);
+        using var tableCmd = new MySqlCommand($"CREATE TABLE IF NOT EXISTS {Config.Database.Table} (steamid varchar(64) PRIMARY KEY,name varchar(64), wardentime int(11) DEFAULT 0, lr_wins int(11) DEFAULT 0, lr_losses int(11) DEFAULT 0)", database);
         tableCmd.ExecuteNonQuery();
 
         // Check table size to see if we have the right number of LR's

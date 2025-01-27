@@ -170,7 +170,7 @@ public class SDZombie : SDBase
 
         // respawn them on their death cordinates
         if (deathCount[player.Slot] == 1)
-            player.Teleport(deathCord[player.Slot], JB.Lib.ANGLE_ZERO, JB.Lib.VEC_ZERO);
+            player.PlayerPawn.Value!.Teleport(deathCord[player.Slot], JB.Lib.ANGLE_ZERO, JB.Lib.VEC_ZERO);
 
         // teleport player to patient zero
         else
@@ -182,7 +182,7 @@ public class SDZombie : SDBase
                 var pawn = patientZero.Pawn();
 
                 if (pawn != null && pawn.AbsOrigin != null)
-                    player.Teleport(pawn.AbsOrigin, JB.Lib.ANGLE_ZERO, JB.Lib.VEC_ZERO);
+                    player.PlayerPawn.Value!.Teleport(pawn.AbsOrigin, JB.Lib.ANGLE_ZERO, JB.Lib.VEC_ZERO);
             }
         }     
     }

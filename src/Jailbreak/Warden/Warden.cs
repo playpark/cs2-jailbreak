@@ -40,8 +40,7 @@ public partial class Warden
 
         JB.JailPlugin.logs.AddLocalized("warden.took_warden", player.PlayerName);
 
-        if (!wardenTime.ContainsKey(slot))
-            wardenTime.Add(slot, DateTime.UtcNow);
+        wardenTime[slot] = DateTime.UtcNow;
     }
 
     public async void RemoveWarden()
@@ -54,14 +53,20 @@ public partial class Warden
             Chat.LocalizeAnnounce(WARDEN_PREFIX, "warden.removed", player.PlayerName);
             JB.JailPlugin.logs.AddLocalized("warden.removed", player.PlayerName);
 
-            DateTime now = DateTime.UtcNow;
-
-            int allSeconds = (int)Math.Round((now - wardenTime[player.Slot]).TotalSeconds);
-
             if (wardenTime.ContainsKey(player.Slot))
-                wardenTime.Remove(player.Slot);
+            {
+                DateTime now = DateTime.UtcNow;
+                int allSeconds = (int)Math.Round((now - wardenTime[player.Slot]).TotalSeconds);
 
-            await SaveWardenTime(player.AuthorizedSteamID.SteamId2, allSeconds);
+                wardenTime.Clear();
+
+                var authorizedid = player.AuthorizedSteamID;
+
+                if (authorizedid == null)
+                    return;
+
+                await SaveWardenTime(authorizedid.SteamId2, allSeconds);
+            }
         }
 
         RemoveWardenInternal();

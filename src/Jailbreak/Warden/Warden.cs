@@ -65,7 +65,7 @@ public partial class Warden
                 if (authorizedid == null)
                     return;
 
-                await SaveWardenTime(authorizedid.SteamId2, allSeconds);
+                await SaveWardenTime(authorizedid.SteamId64, allSeconds);
             }
         }
 
@@ -197,7 +197,7 @@ public partial class Warden
         return Utilities.GetPlayerFromSlot(wardenSlot);
     }
 
-    public static async Task SaveWardenTime(string steamID, int allSeconds)
+    public static async Task SaveWardenTime(ulong steamID, int allSeconds)
     {
         if (allSeconds <= 0)
             return;

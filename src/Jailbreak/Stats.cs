@@ -95,7 +95,7 @@ public class JailStats
         public bool cached = false;
     }
 
-    async void InsertPlayer(String steamID, String playerName)
+    async void InsertPlayer(ulong steamID, String playerName)
     {
         var database = await ConnectDB();
 
@@ -123,7 +123,7 @@ public class JailStats
         if(!player.IsLegal() || type == LastRequest.LRType.NONE  || player.IsBot)
             return;
 
-        String steamID = new SteamID(player.SteamID).SteamId2;
+        ulong steamID = new SteamID(player.SteamID).SteamId64;
 
         // make sure this doesn't block the main thread
         Task.Run(async () =>
@@ -132,7 +132,7 @@ public class JailStats
         });
     }
 
-    public async Task IncDBAsync(String steamID,LastRequest.LRType type, bool win)
+    public async Task IncDBAsync(ulong steamID,LastRequest.LRType type, bool win)
     {
         var database = await ConnectDB();
 
@@ -171,7 +171,7 @@ public class JailStats
     }
 
 
-    void read_stats(ulong id, String steamID, String playerName)
+    void read_stats(ulong id, ulong steamID, String playerName)
     {
          // repull player from steamid if they are still around
         CCSPlayerController? player = Utilities.GetPlayerFromSteamId(id);
@@ -192,7 +192,7 @@ public class JailStats
         });     
     }
 
-    async Task ReadStatsAsync(String steamID, String playerName, int slot)
+    async Task ReadStatsAsync(ulong steamID, String playerName, int slot)
     {
         var database = await ConnectDB();
 
@@ -246,7 +246,7 @@ public class JailStats
 
         // attempt to cache player stats
         String name = player.PlayerName;
-        String steamID = new SteamID(player.SteamID).SteamId2;
+        ulong steamID = new SteamID(player.SteamID).SteamId64;
 
         read_stats(player.SteamID,steamID,name);
     }

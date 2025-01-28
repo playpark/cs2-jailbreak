@@ -50,7 +50,7 @@ public class JailPlayer
         }
     }
 
-    async Task UpdatePlayerDB(String steamID, String name, String value)
+    async Task UpdatePlayerDB(ulong steamID, String name, String value)
     {
         try
         {
@@ -72,7 +72,7 @@ public class JailPlayer
         }
     }
 
-    async Task InsertPlayerDB(String steamID)
+    async Task InsertPlayerDB(ulong steamID)
     {
         using (var connection = new SqliteConnection("Data Source=destoer_config.sqlite"))
         {
@@ -94,7 +94,7 @@ public class JailPlayer
         }
     }
 
-    async Task LoadPlayerDB(String steamID)
+    async Task LoadPlayerDB(ulong steamID)
     {
         using (var connection = new SqliteConnection("Data Source=destoer_config.sqlite"))
         {
@@ -140,7 +140,7 @@ public class JailPlayer
         if (cached)
             return;
 
-        String steamID = new SteamID(player.SteamID).SteamId2;
+        ulong steamID = new SteamID(player.SteamID).SteamId64;
 
         // make sure this doesn't block the main thread
         Task.Run(async () =>
@@ -154,7 +154,7 @@ public class JailPlayer
         if (!player.IsLegal())
             return;
 
-        String steamID = new SteamID(player.SteamID).SteamId2;
+        ulong steamID = new SteamID(player.SteamID).SteamId64;
 
         // make sure this doesn't block the main thread
         Task.Run(async () =>
@@ -212,7 +212,7 @@ public class JailPlayer
         playerRebel.Add(player);
 
         if (Config.Prisoner.RebelAnnounce)
-            Chat.LocalizeAnnounce(REBEL_PREFIX, $"lr.player_rebel", player.PlayerName);
+            Chat.LocalizeAnnounce(REBEL_PREFIX, "lr.player_rebel", player.PlayerName);
 
         if (Config.Prisoner.RebelColor)
             player.SetColour(JB.Lib.RED);

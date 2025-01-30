@@ -37,7 +37,7 @@ public class WardenService : IWardenService
 public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 {
     public override string ModuleName => "Jailbreak";
-    public override string ModuleVersion => "0.5.0";
+    public override string ModuleVersion => "0.5.1";
     public override string ModuleAuthor => "destoer, continued by exkludera";
     
     // Global event settings, used to filter plugin activits
@@ -212,6 +212,8 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         AddCmd(Config.Guard.Warden.Commands.Mute, "do a warden mute", warden.WardenMuteCmd);
 
+        AddCmd(Config.Guard.Warden.Commands.ForceDoors, "force open/close every door", warden.ForceDoorsCmd);
+
         //last request
         AddCmd(Config.Prisoner.LR.Commands.Start, "start lr", lr.LRCmd);
         AddCmd(Config.Prisoner.LR.Commands.Cancel, "cancel lr", lr.CancelLRCmd);
@@ -225,8 +227,6 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         AddCmd(Config.Settings.AdminCommands.SpecialDayCancel, "cancel an sd", sd.CancelSDCmd);
         AddCmd(Config.Settings.AdminCommands.FireGuard, "admin : Remove all guards apart from warden", warden.FireGuardCmd);
         AddCommand(Config.Settings.AdminCommands.SwapGuard, "admin : move a player to ct", warden.SwapGuardCmd);
-
-        AddCmd(Config.Settings.AdminCommands.ForceDoors, "force open/close every door", warden.ForceDoorsCmd);
         
         // debug 
         if (Debug.enable)

@@ -35,21 +35,22 @@ public partial class Warden
         RemoveWarden();
     }
 
-    private bool opened = false;
-    [RequiresPermissions("@css/generic")]
+    private bool openedCells = false;
     public void ForceDoorsCmd(CCSPlayerController? invoke)
     {
-        if (!opened)
+        if (!IsWarden(invoke))
         {
-            Entity.ForceOpen();
-            opened = true;
+            invoke.Announce(WARDEN_PREFIX, "you must be warden to use this command");
+            return;
         }
 
-        else if (opened)
-        {
+        if (!openedCells)
+            Entity.ForceOpen();
+
+        else if (openedCells)
             Entity.ForceClose();
-            opened = false;
-        }
+
+        openedCells = openedCells ? false : true;
     }
 
     public void WardayCmd(CCSPlayerController? player, CommandInfo command)

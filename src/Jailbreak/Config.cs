@@ -36,7 +36,6 @@ public class SettingsConfig
         public string SpecialDay { get; set; } = "sd";
         public string SpecialDayFF { get; set; } = "sd_ff";
         public string SpecialDayCancel { get; set; } = "sd_cancel";
-        public string ForceDoors { get; set; } = "force_open,force_close";
         public string Logs { get; set; } = "logs";
     }
     public SettingsAdminCommands AdminCommands { get; set; } = new SettingsAdminCommands();
@@ -89,6 +88,7 @@ public class CTConfig
             public string GivePardon { get; set; } = "give_pardon";
             public string Countdown { get; set; } = "countdown";
             public string CountdownAbort { get; set; } = "countdown_abort";
+            public string ForceDoors { get; set; } = "force_open,force_close";
         }
         public WardenCommands Commands { get; set; } = new WardenCommands();
 

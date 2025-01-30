@@ -36,14 +36,17 @@ public partial class Warden
         wardenTime.Clear();
 
         SetWardenIfLast();
-    /*
-        ctHandicap = ((Lib.CtCount() * 3) <= Lib.TCount()) && Config.ctHandicap;
 
-        if(ctHandicap)
-        {
-            Chat.Announce(WARDEN_PREFIX,"CT ratio is too low, handicap enabled for this round");
-        }
-    */
+        openedCells = false;
+
+        /*
+            ctHandicap = ((Lib.CtCount() * 3) <= Lib.TCount()) && Config.ctHandicap;
+
+            if(ctHandicap)
+            {
+                Chat.Announce(WARDEN_PREFIX,"CT ratio is too low, handicap enabled for this round");
+            }
+        */
     }
 
     public void TakeDamage(CCSPlayerController? victim,CCSPlayerController? attacker, ref float damage)

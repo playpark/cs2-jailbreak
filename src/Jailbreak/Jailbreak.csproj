@@ -12,4 +12,10 @@
         <PackageReference Include="MySqlConnector" Version="2.3.7" />
         <ProjectReference Include="../WardenService/WardenService.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <Reference Include="CS2-SimpleAdminApi">
+        <HintPath>CS2-SimpleAdminApi.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
 </Project>

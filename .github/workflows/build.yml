@@ -32,7 +32,7 @@ jobs:
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION_PATH }}
       - name: Build
-        run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }}
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }} -r linux-x64 --self-contained false
 
   publish:
     if: github.event_name == 'push'
@@ -48,7 +48,8 @@ jobs:
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION_PATH }}
       - name: Build
-        run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }}
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }} -r linux-x64 --self-contained false
+
       - name: Clean files
         run: |
           rm -f \
@@ -56,12 +57,14 @@ jobs:
             ${{ env.OUTPUT_PATH }}/McMaster.NETCore.Plugins.dll \
             ${{ env.OUTPUT_PATH }}/Microsoft.DotNet.PlatformAbstractions.dll \
             ${{ env.OUTPUT_PATH }}/Microsoft.Extensions.DependencyModel.dll \
+
       - name: Zip
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: 'zip'
           filename: '${{ env.PROJECT_NAME }}.zip'
           path: ${{ env.OUTPUT_PATH }}
+
       - name: Release
         uses: ncipollo/release-action@v1.14.0
         with:

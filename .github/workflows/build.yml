@@ -16,6 +16,7 @@ env:
   PROJECT_PATH: 'src/Jailbreak/Jailbreak.csproj'
   PROJECT_NAME: 'CS2-Jailbreak'
   OUTPUT_PATH: './CS2-Jailbreak'
+  SOLUTION_PATH: 'CS2-Jailbreak.sln'
 
 jobs:
   build:
@@ -29,7 +30,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore
-        run: dotnet restore src
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
       - name: Build
         run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }}
 
@@ -45,7 +46,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore
-        run: dotnet restore src
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
       - name: Build
         run: dotnet build ${{ env.PROJECT_PATH }} -c Release -o ${{ env.OUTPUT_PATH }}
       - name: Clean files

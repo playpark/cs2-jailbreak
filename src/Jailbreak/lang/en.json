@@ -5,6 +5,7 @@
   "lr.lr_prefix": "{green}[LR]: {white}",
   "sd.sd_prefix": "{green}[Special Day]: {white}",
   "mute.mute_prefix": "{green}[Mute]: {white}",
+  "queue.queue_prefix": "{blue}[CT QUEUE]: {white}",
   "mute.muted": "You have not been unmuted, you cannot speak",
   "warday.warday_prefix": "{green}[Warday]: {white}",
   "rebel.rebel_prefix": "{green}[Rebel]: {white}",

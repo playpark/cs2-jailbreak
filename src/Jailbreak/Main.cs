@@ -1,5 +1,4 @@
-﻿
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -140,6 +139,8 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         Warday.WARDAY_PREFIX = Chat.Localize("warday.warday_prefix");
         Warden.WARDEN_PREFIX = Chat.Localize("warden.warden_prefix");
+
+        CTQueue.QUEUE_PREFIX = Chat.Localize("queue.queue_prefix");
     }
 
     void StatDBReload()
@@ -164,6 +165,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         warden.mute.Config = config;
         warden.warday.Config = config;
         warden.block.Config = config;
+        warden.ctQueue.Config = config;
         JailPlayer.Config = config;
 
         sd.Config = config;
@@ -207,6 +209,11 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         //warden
         AddCmd(Config.Guard.Warden.Commands.Warden, "take warden", warden.TakeWardenCmd);
         AddCmd(Config.Guard.Warden.Commands.UnWarden, "leave warden", warden.LeaveWardenCmd);
+
+        // CT Queue commands
+        AddCmd(Config.Guard.Queue.Commands.Join, "join CT queue", JoinQueueCmd);
+        AddCmd(Config.Guard.Queue.Commands.Leave, "leave CT queue", LeaveQueueCmd);
+        AddCmd(Config.Guard.Queue.Commands.List, "list CT queue", ListQueueCmd);
 
         AddCmd(Config.Guard.Warden.Commands.RemoveMarker, "remove warden marker", warden.RemoveMarkerCmd);
         AddCmd(Config.Guard.Warden.Commands.MarkerColor, "set marker color", warden.MarkerColourCmd);
@@ -270,6 +277,22 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         }
     }
 
+    // CT Queue command handlers
+    void JoinQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.JoinQueue(invoke);
+    }
+
+    void LeaveQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.LeaveQueue(invoke);
+    }
+
+    void ListQueueCmd(CCSPlayerController? invoke)
+    {
+        warden.ctQueue.ListQueue(invoke);
+    }
+
     public HookResult JoinTeam(CCSPlayerController? invoke, CommandInfo command)
     {
         jailStats.LoadPlayer(invoke);
@@ -278,6 +301,17 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
         if (jailPlayer != null)
             jailPlayer.LoadPlayer(invoke);
+
+        // Check if player is trying to join CT and should be queued instead
+        if (command.ArgCount >= 2 && Int32.TryParse(command.ArgByIndex(1), out int team))
+        {
+            if (team == Player.TEAM_CT && Config.Guard.Queue.Enabled)
+            {
+                // Always put players in queue instead of allowing direct CT joins
+                warden.ctQueue.JoinQueue(invoke);
+                return HookResult.Handled;
+            }
+        }
 
         if (!warden.JoinTeam(invoke, command))
             return HookResult.Handled;
@@ -521,6 +555,19 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
             // close menu on team switch to prevent illegal usage
             //MenuManager.CloseActiveMenu(player);
             warden.SwitchTeam(player, new_team);
+
+            // If player is joining as T and CT queue is enabled, inform them about the queue
+            if (new_team == Player.TEAM_T && Config.Guard.Queue.Enabled && !warden.ctQueue.IsInQueue(player))
+            {
+                // Add a small delay to ensure the message is seen after team join messages
+                AddTimer(1.0f, () =>
+                {
+                    if (player.IsLegal() && player.IsT())
+                    {
+                        player.Announce(CTQueue.QUEUE_PREFIX, "You've joined as a Terrorist. Type !ct to join the CT queue.");
+                    }
+                });
+            }
         }
 
         return HookResult.Continue;
@@ -551,6 +598,8 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
             warden.Disconnect(player);
             lr.Disconnect(player);
             sd.Disconnect(player);
+
+            // Queue processing only happens at round start/end
         }
 
         return HookResult.Continue;

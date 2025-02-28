@@ -1,16 +1,14 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Collections.Generic;
 
 public class CTQueue
 {
+    public static string QUEUE_PREFIX = "queue.queue_prefix";
     private readonly Queue<int> queueSlots = new Queue<int>();
     private readonly HashSet<int> queueSet = new HashSet<int>();
     public JailConfig Config { get; set; } = new JailConfig();
-
-    public static String QUEUE_PREFIX = $" {ChatColors.Blue}[CT QUEUE]: {ChatColors.White}";
 
     public void Clear()
     {
@@ -33,13 +31,13 @@ public class CTQueue
 
         if (player.IsCt())
         {
-            player.Announce(QUEUE_PREFIX, "You are already on the CT team.");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.already_ct");
             return;
         }
 
         if (IsInQueue(player))
         {
-            player.Announce(QUEUE_PREFIX, "You are already in the queue.");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.already_in_queue");
             return;
         }
 
@@ -47,7 +45,7 @@ public class CTQueue
         queueSet.Add(player.Slot);
 
         int position = queueSlots.Count;
-        player.Announce(QUEUE_PREFIX, $"You have joined the CT queue. Position: {position}");
+        player.LocalizeAnnounce(QUEUE_PREFIX, "queue.joined", position);
 
         // Calculate estimated wait time based on queue position and team ratio
         int ctCount = JB.Lib.CtCount();
@@ -55,25 +53,48 @@ public class CTQueue
         int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
         int availableSlots = maxCTs - ctCount;
 
+        // If there are no CTs at all, process the queue immediately
+        if (ctCount == 0 && tCount > 0)
+        {
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.processing_immediately");
+            ProcessQueue(true);
+            // End the current round and skip to the next one
+            var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
+            Server.NextWorldUpdate(() =>
+            {
+                GameRules?.TerminateRound(0, RoundEndReason.RoundDraw);
+            });
+            return;
+        }
+
+        // Special case: If both teams are empty, allow the first player to join CT
+        if (ctCount == 0 && tCount == 0)
+        {
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.processing_immediately");
+            player.SwitchTeam(CsTeam.CounterTerrorist);
+            Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
+
+            // Remove from queue since they're now on CT
+            queueSlots.Dequeue();
+            queueSet.Remove(player.Slot);
+            return;
+        }
+
         if (availableSlots > 0)
         {
             if (position <= availableSlots)
             {
-                player.Announce(QUEUE_PREFIX, "You will be moved to CT at the start of the next round!");
+                player.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_next_round");
             }
             else
             {
-                player.Announce(QUEUE_PREFIX, $"There are currently {availableSlots} CT slots available. You'll be moved at the start of the next round if slots remain.");
+                player.LocalizeAnnounce(QUEUE_PREFIX, "queue.slots_available", availableSlots);
             }
         }
         else
         {
-            player.Announce(QUEUE_PREFIX, "No CT slots available right now. You'll be moved when a slot opens at the start of the next round.");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.no_slots");
         }
-
-        Chat.Announce(QUEUE_PREFIX, $"{player.PlayerName} has joined the CT queue.");
-
-        // Don't process queue immediately - only at round start/end
     }
 
     public void LeaveQueue(CCSPlayerController? player)
@@ -83,14 +104,14 @@ public class CTQueue
 
         if (!IsInQueue(player))
         {
-            player.Announce(QUEUE_PREFIX, "You are not in the queue.");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.not_in_queue");
             return;
         }
 
         // Need to rebuild the queue without this player
         RemovePlayerFromQueue(player.Slot);
 
-        player.Announce(QUEUE_PREFIX, "You have left the CT queue.");
+        player.LocalizeAnnounce(QUEUE_PREFIX, "queue.left");
     }
 
     private void RemovePlayerFromQueue(int slot)
@@ -126,11 +147,11 @@ public class CTQueue
 
         if (queueSlots.Count == 0)
         {
-            player.Announce(QUEUE_PREFIX, "The CT queue is currently empty.");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.empty");
             return;
         }
 
-        player.Announce(QUEUE_PREFIX, "Current CT Queue:");
+        player.LocalizeAnnounce(QUEUE_PREFIX, "queue.current");
 
         int position = 1;
         foreach (int slot in queueSlots)
@@ -138,7 +159,7 @@ public class CTQueue
             CCSPlayerController? queuedPlayer = Utilities.GetPlayerFromSlot(slot);
             if (queuedPlayer.IsLegal())
             {
-                player.Announce(QUEUE_PREFIX, $"{position}. {queuedPlayer.PlayerName}");
+                player.LocalizeAnnounce(QUEUE_PREFIX, "queue.position_entry", position, queuedPlayer.PlayerName);
             }
             position++;
         }
@@ -159,6 +180,12 @@ public class CTQueue
         if (isRoundStart && maxCTs < 2 && tCount > 0)
         {
             maxCTs = 2; // Ensure at least 2 CT slots at round start if there are Ts
+        }
+
+        // Special case: If both teams are empty, allow at least one CT
+        if (ctCount == 0 && tCount == 0)
+        {
+            maxCTs = 1; // Allow at least one CT when both teams are empty
         }
 
         int availableSlots = maxCTs - ctCount;
@@ -183,7 +210,7 @@ public class CTQueue
 
             // Move player to CT
             player.SwitchTeam(CsTeam.CounterTerrorist);
-            Chat.Announce(QUEUE_PREFIX, $"{player.PlayerName} has been moved to CT from the queue.");
+            Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
 
             // Remove from queue
             queueSlots.Dequeue();
@@ -200,7 +227,7 @@ public class CTQueue
                 CCSPlayerController? queuedPlayer = Utilities.GetPlayerFromSlot(slot);
                 if (queuedPlayer.IsLegal())
                 {
-                    queuedPlayer.Announce(QUEUE_PREFIX, $"Your position in queue: {position}");
+                    queuedPlayer.LocalizeAnnounce(QUEUE_PREFIX, "queue.position_update", position);
                 }
                 position++;
             }
@@ -220,13 +247,11 @@ public class CTQueue
 
     public void RoundStart()
     {
-        // Process queue at the start of each round with special round start flag
         ProcessQueue(true);
     }
 
     public void RoundEnd()
     {
-        // Process queue at the end of each round
         ProcessQueue();
     }
 
@@ -235,12 +260,9 @@ public class CTQueue
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
             return;
 
-        // If player joined CT, remove them from queue
         if (player.IsCt() && IsInQueue(player))
         {
             RemovePlayerFromQueue(player.Slot);
         }
-
-        // Don't process queue on team changes - only at round start/end
     }
 }

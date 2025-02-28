@@ -14,9 +14,9 @@ on:
 env:
   BUILD_NUMBER: ${{ github.run_number }}
   PROJECT_PATH: 'src/Jailbreak/Jailbreak.csproj'
-  PROJECT_NAME: 'CS2-Jailbreak'
-  OUTPUT_PATH: './CS2-Jailbreak'
-  SOLUTION_PATH: 'CS2-Jailbreak.sln'
+  PROJECT_NAME: 'Jailbreak'
+  OUTPUT_PATH: './Jailbreak'
+  SOLUTION_PATH: 'Jailbreak.sln'
 
 jobs:
   build:

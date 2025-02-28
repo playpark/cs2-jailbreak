@@ -399,6 +399,23 @@ public class CTQueue
         {
             // Remove from CT join times if they switched to T
             ctJoinTimes.Remove(player.Slot);
+
+            // Check if CT team is now empty after this player switched to T
+            int ctCount = JB.Lib.CtCount();
+            int tCount = JB.Lib.TCount();
+
+            if (ctCount == 0 && tCount > 0)
+            {
+                // CT team is empty but there are still Ts, end the round
+                Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.ct_team_empty");
+
+                // End the current round and skip to the next one
+                var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
+                Server.NextWorldUpdate(() =>
+                {
+                    GameRules?.TerminateRound(0, RoundEndReason.RoundDraw);
+                });
+            }
         }
 
         // Check if we need to rebalance teams after team change

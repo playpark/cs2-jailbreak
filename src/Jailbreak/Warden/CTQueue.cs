@@ -8,6 +8,10 @@ public class CTQueue
     public static string QUEUE_PREFIX = "queue.queue_prefix";
     private readonly Queue<int> queueSlots = new Queue<int>();
     private readonly HashSet<int> queueSet = new HashSet<int>();
+    // Track when players join CT team (slot -> timestamp)
+    private readonly Dictionary<int, DateTime> ctJoinTimes = new Dictionary<int, DateTime>();
+    // Flag to track if team balance is needed
+    private bool needsRebalance = false;
     public JailConfig Config { get; set; } = new JailConfig();
 
     public void Clear()
@@ -22,6 +26,15 @@ public class CTQueue
             return false;
 
         return queueSet.Contains(player.Slot);
+    }
+
+    // Public method to track when a player joins CT team
+    public void TrackCTJoin(CCSPlayerController? player)
+    {
+        if (player.IsLegal() && player.IsCt())
+        {
+            ctJoinTimes[player.Slot] = DateTime.UtcNow;
+        }
     }
 
     public void JoinQueue(CCSPlayerController? player)
@@ -73,6 +86,9 @@ public class CTQueue
             player.LocalizeAnnounce(QUEUE_PREFIX, "queue.processing_immediately");
             player.SwitchTeam(CsTeam.CounterTerrorist);
             Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
+
+            // Track when this player joined CT
+            ctJoinTimes[player.Slot] = DateTime.UtcNow;
 
             // Remove from queue since they're now on CT
             queueSlots.Dequeue();
@@ -188,7 +204,8 @@ public class CTQueue
             maxCTs = 1; // Allow at least one CT when both teams are empty
         }
 
-        int availableSlots = maxCTs - ctCount;
+        // Allow one CT over the limit (CT+1)
+        int availableSlots = (maxCTs + 1) - ctCount;
 
         if (availableSlots <= 0)
             return;
@@ -212,6 +229,9 @@ public class CTQueue
             player.SwitchTeam(CsTeam.CounterTerrorist);
             Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
 
+            // Track when this player joined CT
+            ctJoinTimes[player.Slot] = DateTime.UtcNow;
+
             // Remove from queue
             queueSlots.Dequeue();
             queueSet.Remove(slot);
@@ -234,6 +254,91 @@ public class CTQueue
         }
     }
 
+    // Check if team rebalancing is needed (when Ts leave)
+    private void CheckTeamBalance()
+    {
+        int ctCount = JB.Lib.CtCount();
+        int tCount = JB.Lib.TCount();
+
+        // Calculate max allowed CTs based on current T count
+        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
+
+        // Allow one CT over the limit (CT+1)
+        maxCTs += 1;
+
+        // If we have more CTs than allowed, we need to rebalance
+        if (ctCount > maxCTs && ctCount > 0 && tCount >= 0)
+        {
+            needsRebalance = true;
+        }
+    }
+
+    // Rebalance teams by moving newest CTs to T
+    private void RebalanceTeams()
+    {
+        if (!needsRebalance)
+            return;
+
+        int ctCount = JB.Lib.CtCount();
+        int tCount = JB.Lib.TCount();
+
+        // Calculate max allowed CTs based on current T count
+        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
+
+        // Allow one CT over the limit (CT+1)
+        maxCTs += 1;
+
+        // If we have more CTs than allowed, move the newest ones to T
+        if (ctCount > maxCTs)
+        {
+            int excessCTs = ctCount - maxCTs;
+
+            // Get all CT players sorted by join time (newest first)
+            var ctPlayers = new List<KeyValuePair<int, DateTime>>();
+            foreach (var player in JB.Lib.GetPlayers())
+            {
+                if (player.IsCt() && ctJoinTimes.ContainsKey(player.Slot))
+                {
+                    ctPlayers.Add(new KeyValuePair<int, DateTime>(player.Slot, ctJoinTimes[player.Slot]));
+                }
+                else if (player.IsCt() && !ctJoinTimes.ContainsKey(player.Slot))
+                {
+                    // If we don't have a join time for this CT, add them with current time
+                    // This ensures they'll be considered as newest CTs
+                    ctJoinTimes[player.Slot] = DateTime.UtcNow;
+                    ctPlayers.Add(new KeyValuePair<int, DateTime>(player.Slot, ctJoinTimes[player.Slot]));
+                }
+            }
+
+            // Sort by join time (newest first)
+            ctPlayers.Sort((a, b) => b.Value.CompareTo(a.Value));
+
+            // Move the newest CTs to T
+            int moved = 0;
+            foreach (var ctPlayer in ctPlayers)
+            {
+                if (moved >= excessCTs)
+                    break;
+
+                CCSPlayerController? player = Utilities.GetPlayerFromSlot(ctPlayer.Key);
+                if (player.IsLegal() && player.IsCt())
+                {
+                    player.SwitchTeam(CsTeam.Terrorist);
+                    Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_t_balance", player.PlayerName);
+                    ctJoinTimes.Remove(player.Slot);
+                    moved++;
+                }
+            }
+
+            if (moved > 0)
+            {
+                Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.team_rebalanced", moved);
+            }
+        }
+
+        needsRebalance = false;
+    }
+
     public void PlayerDisconnect(CCSPlayerController? player)
     {
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
@@ -243,15 +348,38 @@ public class CTQueue
         {
             RemovePlayerFromQueue(player.Slot);
         }
+
+        // If a T player disconnects, check if we need to rebalance teams
+        if (player.IsT())
+        {
+            CheckTeamBalance();
+        }
+
+        // Remove from CT join times if they were a CT
+        if (player.IsCt() && ctJoinTimes.ContainsKey(player.Slot))
+        {
+            ctJoinTimes.Remove(player.Slot);
+        }
     }
 
     public void RoundStart()
     {
+        // Rebalance teams at round start if needed
+        if (needsRebalance)
+        {
+            RebalanceTeams();
+        }
+
+        // Process queue after rebalancing
         ProcessQueue(true);
     }
 
     public void RoundEnd()
     {
+        // Check if we need to rebalance teams for the next round
+        CheckTeamBalance();
+
+        // Process queue
         ProcessQueue();
     }
 
@@ -263,6 +391,17 @@ public class CTQueue
         if (player.IsCt() && IsInQueue(player))
         {
             RemovePlayerFromQueue(player.Slot);
+
+            // Track when this player joined CT
+            ctJoinTimes[player.Slot] = DateTime.UtcNow;
         }
+        else if (player.IsT() && ctJoinTimes.ContainsKey(player.Slot))
+        {
+            // Remove from CT join times if they switched to T
+            ctJoinTimes.Remove(player.Slot);
+        }
+
+        // Check if we need to rebalance teams after team change
+        CheckTeamBalance();
     }
 }

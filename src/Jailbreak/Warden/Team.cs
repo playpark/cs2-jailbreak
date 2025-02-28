@@ -101,6 +101,12 @@ public partial class Warden
             {
                 invoke.Localize("warden.guard_swapped", player.PlayerName);
                 player.SwitchTeam(CsTeam.CounterTerrorist);
+
+                // Track when this player joined CT
+                if (ctQueue != null)
+                {
+                    ctQueue.TrackCTJoin(player);
+                }
             }
         }
     }

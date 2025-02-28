@@ -119,7 +119,15 @@ public static class Lib
     static public void SwapAllCT()
     {
         foreach (var player in GetAlivePlayers())
+        {
             player.SwitchTeam(CsTeam.CounterTerrorist);
+
+            // Track when this player joined CT
+            if (JB.JailPlugin.warden.ctQueue != null)
+            {
+                JB.JailPlugin.warden.ctQueue.TrackCTJoin(player);
+            }
+        }
     }
 
     static public void RespawnPlayers()

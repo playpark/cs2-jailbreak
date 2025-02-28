@@ -102,5 +102,7 @@
   "queue.current": "Current CT Queue:",
   "queue.position_entry": "{0}. {1}",
   "queue.moved_to_ct": "{0} has been moved to CT from the queue.",
-  "queue.position_update": "Your position in queue: {0}"
+  "queue.position_update": "Your position in queue: {0}",
+  "queue.moved_to_t_balance": "{0} has been moved to T due to team balancing.",
+  "queue.team_rebalanced": "Teams have been rebalanced. {0} player(s) moved to T team."
 }

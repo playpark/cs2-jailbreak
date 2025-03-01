@@ -230,7 +230,7 @@ public class CTQueue
             // Respawn the player after team switch to ensure they spawn in the armory
             Server.NextWorldUpdate(() =>
             {
-                if (player.IsLegal() && player.IsCt() && player.PlayerPawn.IsValid)
+                if (player.IsLegal() && player.IsCt() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
                 {
                     // Kill the player first to remove all weapons
                     player.PlayerPawn.Value.CommitSuicide(false, true);
@@ -333,7 +333,7 @@ public class CTQueue
                     // and spawn in a cell as a T
                     Server.NextWorldUpdate(() =>
                     {
-                        if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid)
+                        if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
                         {
                             // Kill the player first to remove all weapons
                             player.PlayerPawn.Value.CommitSuicide(false, true);
@@ -424,7 +424,7 @@ public class CTQueue
             // and spawn in a cell as a T
             Server.NextWorldUpdate(() =>
             {
-                if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid)
+                if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
                 {
                     // Kill the player first to remove all weapons
                     player.PlayerPawn.Value.CommitSuicide(false, true);

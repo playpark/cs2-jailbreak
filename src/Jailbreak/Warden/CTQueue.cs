@@ -63,7 +63,7 @@ public class CTQueue
         // Calculate estimated wait time based on queue position and team ratio
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
-        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
+        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
         int availableSlots = maxCTs - ctCount;
 
         // If there are no CTs at all, process the queue immediately
@@ -190,13 +190,7 @@ public class CTQueue
         int tCount = JB.Lib.TCount();
 
         // Check if we can add more CTs based on the ratio
-        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
-
-        // At round start, be more aggressive with filling CT slots
-        if (isRoundStart && maxCTs < 2 && tCount > 0)
-        {
-            maxCTs = 2; // Ensure at least 2 CT slots at round start if there are Ts
-        }
+        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
 
         // Special case: If both teams are empty, allow at least one CT
         if (ctCount == 0 && tCount == 0)
@@ -204,8 +198,8 @@ public class CTQueue
             maxCTs = 1; // Allow at least one CT when both teams are empty
         }
 
-        // Allow one CT over the limit (CT+1)
-        int availableSlots = (maxCTs + 1) - ctCount;
+        // Calculate available slots without the +1 flexibility
+        int availableSlots = maxCTs - ctCount;
 
         if (availableSlots <= 0)
             return;
@@ -260,14 +254,11 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Calculate max allowed CTs based on current T count
-        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
-
-        // Allow one CT over the limit (CT+1)
-        maxCTs += 1;
+        // Calculate max allowed CTs based on current T count, with minimum of 1
+        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
 
         // If we have more CTs than allowed, we need to rebalance
-        if (ctCount > maxCTs && ctCount > 0 && tCount >= 0)
+        if (ctCount > maxCTs && ctCount > 0)
         {
             needsRebalance = true;
         }
@@ -282,11 +273,8 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Calculate max allowed CTs based on current T count
-        int maxCTs = (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0);
-
-        // Allow one CT over the limit (CT+1)
-        maxCTs += 1;
+        // Calculate max allowed CTs based on current T count, with minimum of 1
+        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
 
         // If we have more CTs than allowed, move the newest ones to T
         if (ctCount > maxCTs)
@@ -418,7 +406,6 @@ public class CTQueue
             }
         }
 
-        // Check if we need to rebalance teams after team change
         CheckTeamBalance();
     }
 }

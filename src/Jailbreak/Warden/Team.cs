@@ -54,7 +54,15 @@ public partial class Warden
                     // i.e at a suitable raito or either team is empty
                     if ((CtCount * Config.Guard.TeamRatio) > TCount && CtCount != 0 && TCount != 0)
                     {
-                        invoke.Announce(TEAM_PREFIX, $"Sorry, CT has too many players {Config.Guard.TeamRatio}:1 ratio maximum");
+                        invoke.Announce(TEAM_PREFIX, $"Sorry, CT has too many players. Strict {Config.Guard.TeamRatio}:1 ratio enforced");
+                        invoke.PlaySound("sounds/ui/counter_beep.vsnd");
+                        return false;
+                    }
+
+                    // Ensure we maintain at least 1 CT
+                    if (CtCount >= Math.Max(1, (TCount / Config.Guard.TeamRatio) + (TCount % Config.Guard.TeamRatio > 0 ? 1 : 0)))
+                    {
+                        invoke.Announce(TEAM_PREFIX, $"Sorry, CT team is full. Strict {Config.Guard.TeamRatio}:1 ratio enforced");
                         invoke.PlaySound("sounds/ui/counter_beep.vsnd");
                         return false;
                     }

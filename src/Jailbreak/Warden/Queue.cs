@@ -15,6 +15,23 @@ public class CTQueue
     private bool needsRebalance = false;
     public JailConfig Config { get; set; } = new JailConfig();
 
+    // Helper method to calculate the maximum number of CTs based on T count
+    private int CalculateMaxCTs(int tCount, int ctCount = 0)
+    {
+        // Strict ratio without rounding up
+        int maxCTs = tCount / Config.Guard.TeamRatio;
+
+        // Special case: If there are Ts but maxCTs would be 0, allow at least 1 CT
+        if (tCount > 0 && maxCTs == 0)
+            maxCTs = 1;
+
+        // Special case: If both teams are empty, allow at least one CT
+        if (ctCount == 0 && tCount == 0)
+            maxCTs = 1;
+
+        return maxCTs;
+    }
+
     // Helper method to check if a player is muted by an admin
     private bool IsPlayerAdminMuted(CCSPlayerController? player)
     {
@@ -89,7 +106,7 @@ public class CTQueue
         // Calculate estimated wait time based on queue position and team ratio
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
-        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
+        int maxCTs = CalculateMaxCTs(tCount, ctCount);
         int availableSlots = maxCTs - ctCount;
 
         // If there are no CTs at all, process the queue immediately
@@ -215,16 +232,10 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Check if we can add more CTs based on the ratio
-        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
+        // Check if we can add more CTs based on the strict ratio
+        int maxCTs = CalculateMaxCTs(tCount, ctCount);
 
-        // Special case: If both teams are empty, allow at least one CT
-        if (ctCount == 0 && tCount == 0)
-        {
-            maxCTs = 1; // Allow at least one CT when both teams are empty
-        }
-
-        // Calculate available slots without the +1 flexibility
+        // Calculate available slots
         int availableSlots = maxCTs - ctCount;
 
         if (availableSlots <= 0)
@@ -303,8 +314,8 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Calculate max allowed CTs based on current T count, with minimum of 1
-        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
+        // Calculate max allowed CTs based on current T count with strict ratio
+        int maxCTs = CalculateMaxCTs(tCount, ctCount);
 
         // If we have more CTs than allowed, we need to rebalance
         if (ctCount > maxCTs && ctCount > 0)
@@ -322,8 +333,8 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Calculate max allowed CTs based on current T count, with minimum of 1
-        int maxCTs = Math.Max(1, (tCount / Config.Guard.TeamRatio) + (tCount % Config.Guard.TeamRatio > 0 ? 1 : 0));
+        // Calculate max allowed CTs based on current T count with strict ratio
+        int maxCTs = CalculateMaxCTs(tCount, ctCount);
 
         // If we have more CTs than allowed, move the newest ones to T
         if (ctCount > maxCTs)

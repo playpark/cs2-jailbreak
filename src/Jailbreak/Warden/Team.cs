@@ -71,7 +71,31 @@ public partial class Warden
                 }
 
             case Player.TEAM_T:
-                return true;
+                {
+                    // Allow CTs to swap to T team
+                    if (invoke.IsCt())
+                    {
+                        int ctCount = JB.Lib.CtCount();
+                        if (ctCount <= 1)
+                        {
+                            invoke.Announce(TEAM_PREFIX, $"Cannot swap to T: You are the only CT player");
+                            invoke.PlaySound("sounds/ui/counter_beep.vsnd");
+                            return false;
+                        }
+
+                        if (invoke.IsLegalAlive())
+                        {
+                            invoke.Announce(TEAM_PREFIX, $"You will be killed before swapping to T team");
+                            invoke.Slay();
+                        }
+
+                        // If player is warden, remove warden status
+                        RemoveIfWarden(invoke);
+
+                        return true;
+                    }
+                    return true;
+                }
 
             case Player.TEAM_SPEC:
                 return true;

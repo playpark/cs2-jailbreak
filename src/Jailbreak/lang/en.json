@@ -100,12 +100,13 @@
   "queue.not_in_queue": "You are not in the queue.",
   "queue.left": "You have left the CT queue.",
   "queue.empty": "The CT queue is currently empty.",
-  "queue.current": "Current CT Queue:",
+  "queue.current": "Current CT queue:",
   "queue.position_entry": "{0}. {1}",
-  "queue.moved_to_ct": "{0} has been moved to CT from the queue.",
-  "queue.position_update": "Your position in queue: {0}",
-  "jailbreak.moved_to_t_balance": "{0} has been moved to T due to team balancing.",
-  "jailbreak.team_rebalanced": "Teams have been rebalanced. {0} player(s) moved to T team.",
-  "jailbreak.respawned_after_rebalance": "You have been respawned in a cell after team rebalancing.",
-  "jailbreak.ct_team_empty": "CT team is empty! Ending the round."
+  "queue.position_update": "Your position in the CT queue is now: {0}",
+  "queue.moved_to_ct": "{0} has been moved to the CT team from the queue.",
+  "queue.muted_cannot_join": "You cannot join CT or queue for CT while you are muted by an admin.",
+  "jailbreak.moved_to_t_balance": "{0} has been moved to T team for team balance.",
+  "jailbreak.team_rebalanced": "{0} players moved from CT to T for team balance.",
+  "jailbreak.respawned_after_rebalance": "You have been respawned after team rebalance.",
+  "jailbreak.ct_team_empty": "CT team is now empty! Ending the round..."
 }

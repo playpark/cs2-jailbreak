@@ -15,6 +15,24 @@ public class CTQueue
     private bool needsRebalance = false;
     public JailConfig Config { get; set; } = new JailConfig();
 
+    // Helper method to check if a player is muted by an admin
+    private bool IsPlayerAdminMuted(CCSPlayerController? player)
+    {
+        if (!player.IsLegal())
+            return false;
+
+        // Check if SimpleAdmin is enabled and available
+        if (JB.JailPlugin.globalCtx?.SimpleAdminEnabled == true && JB.JailPlugin.globalCtx._SimpleAdminsharedApi != null)
+        {
+            var muteStatus = JB.JailPlugin.globalCtx._SimpleAdminsharedApi.GetPlayerMuteStatus(player);
+            // If muteStatus is not null and has entries, player is muted by admin
+            return muteStatus != null && muteStatus.Count > 0;
+        }
+
+        // If SimpleAdmin is not available, check if player has the muted flag
+        return player.VoiceFlags.HasFlag(VoiceFlags.Muted);
+    }
+
     public void Clear()
     {
         queueSlots.Clear();
@@ -42,6 +60,13 @@ public class CTQueue
     {
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
             return;
+
+        // Check if player is muted by an admin
+        if (IsPlayerAdminMuted(player))
+        {
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.muted_cannot_join");
+            return;
+        }
 
         if (player.IsCt())
         {
@@ -217,6 +242,16 @@ public class CTQueue
                 // Remove invalid players or those already on CT
                 queueSlots.Dequeue();
                 queueSet.Remove(slot);
+                continue;
+            }
+
+            // Check if player is muted by an admin
+            if (IsPlayerAdminMuted(player))
+            {
+                // Remove from queue and notify
+                queueSlots.Dequeue();
+                queueSet.Remove(slot);
+                player.LocalizeAnnounce(QUEUE_PREFIX, "queue.muted_cannot_join");
                 continue;
             }
 
@@ -407,6 +442,15 @@ public class CTQueue
     {
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
             return;
+
+        // If player is trying to join CT directly, check if they're muted
+        if (player.IsCt() && IsPlayerAdminMuted(player))
+        {
+            // Force them back to T team
+            player.SwitchTeam(CsTeam.Terrorist);
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.muted_cannot_join");
+            return;
+        }
 
         if (player.IsCt() && IsInQueue(player))
         {

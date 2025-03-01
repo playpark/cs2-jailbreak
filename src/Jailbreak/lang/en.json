@@ -107,6 +107,5 @@
   "jailbreak.moved_to_t_balance": "{0} has been moved to T due to team balancing.",
   "jailbreak.team_rebalanced": "Teams have been rebalanced. {0} player(s) moved to T team.",
   "jailbreak.respawned_after_rebalance": "You have been respawned in a cell after team rebalancing.",
-  "jailbreak.respawned_after_team_change": "You have been respawned in a cell after changing to T team.",
   "jailbreak.ct_team_empty": "CT team is empty! Ending the round."
 }

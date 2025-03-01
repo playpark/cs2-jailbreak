@@ -227,6 +227,19 @@ public class CTQueue
             // Track when this player joined CT
             ctJoinTimes[player.Slot] = DateTime.UtcNow;
 
+            // Respawn the player after team switch to ensure they spawn in the armory
+            Server.NextWorldUpdate(() =>
+            {
+                if (player.IsLegal() && player.IsCt() && player.PlayerPawn.IsValid)
+                {
+                    // Kill the player first to remove all weapons
+                    player.PlayerPawn.Value.CommitSuicide(false, true);
+
+                    // Then respawn them
+                    player.Respawn();
+                }
+            });
+
             // Remove from queue
             queueSlots.Dequeue();
             queueSet.Remove(slot);
@@ -419,8 +432,6 @@ public class CTQueue
                     // Then respawn them
                     player.Respawn();
 
-                    // Notify the player
-                    player.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.respawned_after_team_change");
                 }
             });
 

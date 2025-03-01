@@ -2,6 +2,7 @@
   "warden.warden_prefix": "{green}[Warden]: {white}",
   "warden.door_prefix": "{green}[Door]: {white}",
   "warden.team_prefix": "{green}[Team]: {white}",
+  "jailbreak.game_prefix": "{green}[Jailbreak]: {white}",
   "lr.lr_prefix": "{green}[LR]: {white}",
   "sd.sd_prefix": "{green}[Special Day]: {white}",
   "mute.mute_prefix": "{green}[Mute]: {white}",
@@ -103,6 +104,9 @@
   "queue.position_entry": "{0}. {1}",
   "queue.moved_to_ct": "{0} has been moved to CT from the queue.",
   "queue.position_update": "Your position in queue: {0}",
-  "queue.moved_to_t_balance": "{0} has been moved to T due to team balancing.",
-  "queue.team_rebalanced": "Teams have been rebalanced. {0} player(s) moved to T team."
+  "jailbreak.moved_to_t_balance": "{0} has been moved to T due to team balancing.",
+  "jailbreak.team_rebalanced": "Teams have been rebalanced. {0} player(s) moved to T team.",
+  "jailbreak.respawned_after_rebalance": "You have been respawned in a cell after team rebalancing.",
+  "jailbreak.respawned_after_team_change": "You have been respawned in a cell after changing to T team.",
+  "jailbreak.ct_team_empty": "CT team is empty! Ending the round."
 }

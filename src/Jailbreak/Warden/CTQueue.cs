@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 public class CTQueue
 {
     public static string QUEUE_PREFIX = "queue.queue_prefix";
+    public static string JAILBREAK_PREFIX = "jailbreak.game_prefix";
     private readonly Queue<int> queueSlots = new Queue<int>();
     private readonly HashSet<int> queueSet = new HashSet<int>();
     // Track when players join CT team (slot -> timestamp)
@@ -312,15 +313,33 @@ public class CTQueue
                 if (player.IsLegal() && player.IsCt())
                 {
                     player.SwitchTeam(CsTeam.Terrorist);
-                    Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_t_balance", player.PlayerName);
+                    Chat.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.moved_to_t_balance", player.PlayerName);
                     ctJoinTimes.Remove(player.Slot);
+
+                    // Respawn the player after team switch to ensure they don't keep weapons
+                    // and spawn in a cell as a T
+                    Server.NextWorldUpdate(() =>
+                    {
+                        if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid)
+                        {
+                            // Kill the player first to remove all weapons
+                            player.PlayerPawn.Value.CommitSuicide(false, true);
+
+                            // Then respawn them
+                            player.Respawn();
+
+                            // Notify the player
+                            player.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.respawned_after_rebalance");
+                        }
+                    });
+
                     moved++;
                 }
             }
 
             if (moved > 0)
             {
-                Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.team_rebalanced", moved);
+                Chat.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.team_rebalanced", moved);
             }
         }
 
@@ -388,6 +407,23 @@ public class CTQueue
             // Remove from CT join times if they switched to T
             ctJoinTimes.Remove(player.Slot);
 
+            // Respawn the player after team switch to ensure they don't keep weapons
+            // and spawn in a cell as a T
+            Server.NextWorldUpdate(() =>
+            {
+                if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid)
+                {
+                    // Kill the player first to remove all weapons
+                    player.PlayerPawn.Value.CommitSuicide(false, true);
+
+                    // Then respawn them
+                    player.Respawn();
+
+                    // Notify the player
+                    player.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.respawned_after_team_change");
+                }
+            });
+
             // Check if CT team is now empty after this player switched to T
             int ctCount = JB.Lib.CtCount();
             int tCount = JB.Lib.TCount();
@@ -395,7 +431,7 @@ public class CTQueue
             if (ctCount == 0 && tCount > 0)
             {
                 // CT team is empty but there are still Ts, end the round
-                Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.ct_team_empty");
+                Chat.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.ct_team_empty");
 
                 // End the current round and skip to the next one
                 var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;

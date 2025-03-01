@@ -141,6 +141,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         Warden.WARDEN_PREFIX = Chat.Localize("warden.warden_prefix");
 
         CTQueue.QUEUE_PREFIX = Chat.Localize("queue.queue_prefix");
+        CTQueue.JAILBREAK_PREFIX = Chat.Localize("jailbreak.game_prefix");
     }
 
     void StatDBReload()

@@ -474,23 +474,22 @@ public class CTQueue
         {
             // Remove from CT join times if they switched to T
             ctJoinTimes.Remove(player.Slot);
+        }
 
-            // Respawn the player after team switch to ensure they don't keep weapons
-            // and spawn in a cell as a T
-            Server.NextWorldUpdate(() =>
+        Server.NextWorldUpdate(() =>
+        {
+            if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
             {
-                if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
-                {
-                    // Kill the player first to remove all weapons
-                    player.PlayerPawn.Value.CommitSuicide(false, true);
+                // Kill the player first to remove all weapons
+                player.PlayerPawn.Value.CommitSuicide(false, true);
 
-                    // Then respawn them
-                    player.Respawn();
+                // Then respawn them
+                player.Respawn();
+            }
+        });
 
-                }
-            });
-
-            // Check if CT team is now empty after this player switched to T
+        if (player.IsT())
+        {
             int ctCount = JB.Lib.CtCount();
             int tCount = JB.Lib.TCount();
 

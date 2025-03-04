@@ -9,6 +9,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CSTimer = CounterStrikeSharp.API.Modules.Timers;
 using CS2_SimpleAdminApi;
+using CTBans.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace JB;
@@ -44,7 +45,11 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     public ICS2_SimpleAdminApi? _SimpleAdminsharedApi;
     private readonly PluginCapability<ICS2_SimpleAdminApi> _SimpleAdminCapability = new("simpleadmin:api");
 
+    public ICTBansApi? _CTBansApi;
+    public PluginCapability<ICTBansApi> _CTBansCapability = new("ctbans:api");
+
     public bool SimpleAdminEnabled = false;
+    public bool CTBansEnabled = false;
 
     // Global event settings, used to filter plugin activits
     // during warday and SD
@@ -123,6 +128,18 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
         {
             Logger.LogInformation("Enabling SimpleAdmin integration.");
             SimpleAdminEnabled = true;
+        }
+
+        _CTBansApi = _CTBansCapability.Get();
+
+        if (_CTBansApi == null)
+        {
+            CTBansEnabled = false;
+        }
+        else
+        {
+            Logger.LogInformation("Enabling CTBans integration.");
+            CTBansEnabled = true;
         }
     }
 

@@ -34,6 +34,15 @@ public partial class Warden
         {
             case Player.TEAM_CT:
                 {
+                    // Check if player is CT banned using CTBans API
+                    if (JB.JailPlugin.globalCtx?.CTBansEnabled == true && JB.JailPlugin.globalCtx._CTBansApi != null)
+                    {
+                        if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(invoke))
+                        {
+                            return false;
+                        }
+                    }
+
                     if (Config.Guard.SwapOnly)
                     {
                         invoke.Announce(TEAM_PREFIX, $"Sorry guards must be swapped to CT by admin");
@@ -131,6 +140,17 @@ public partial class Warden
         {
             if (player.IsLegal())
             {
+                // Check if player is CT banned using CTBans API
+                if (JB.JailPlugin.globalCtx?.CTBansEnabled == true && JB.JailPlugin.globalCtx._CTBansApi != null)
+                {
+                    if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(player))
+                    {
+                        // Player is CT banned, notify the admin
+                        invoke.Localize("warden.guard_swap_failed_banned", player.PlayerName);
+                        continue;
+                    }
+                }
+
                 invoke.Localize("warden.guard_swapped", player.PlayerName);
                 player.SwitchTeam(CsTeam.CounterTerrorist);
 

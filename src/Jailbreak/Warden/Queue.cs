@@ -78,6 +78,16 @@ public class CTQueue
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
             return;
 
+        // Check if player is CT banned using CTBans API
+        if (JB.JailPlugin.globalCtx?.CTBansEnabled == true && JB.JailPlugin.globalCtx._CTBansApi != null)
+        {
+            if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(player))
+            {
+                // Player is CT banned, don't allow them to join the queue
+                return;
+            }
+        }
+
         // Check if player is muted by an admin
         if (IsPlayerAdminMuted(player))
         {
@@ -93,7 +103,7 @@ public class CTQueue
 
         if (IsInQueue(player))
         {
-            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.already_in_queue");
+            player.LocalizeAnnounce(QUEUE_PREFIX, "queue.joined", queueSlots.Count);
             return;
         }
 
@@ -224,7 +234,8 @@ public class CTQueue
         }
     }
 
-    public void ProcessQueue(bool isRoundStart = false)
+    // Process the queue and move eligible players to CT team
+    public void ProcessQueue(bool force = false)
     {
         if (!Config.Guard.Queue.Enabled || queueSlots.Count == 0)
             return;
@@ -238,12 +249,12 @@ public class CTQueue
         // Calculate available slots
         int availableSlots = maxCTs - ctCount;
 
-        if (availableSlots <= 0)
+        if (availableSlots <= 0 && !force)
             return;
 
         // Process players in queue up to available slots
         int processed = 0;
-        while (queueSlots.Count > 0 && processed < availableSlots)
+        while (queueSlots.Count > 0 && (processed < availableSlots || force))
         {
             int slot = queueSlots.Peek();
             CCSPlayerController? player = Utilities.GetPlayerFromSlot(slot);
@@ -254,6 +265,18 @@ public class CTQueue
                 queueSlots.Dequeue();
                 queueSet.Remove(slot);
                 continue;
+            }
+
+            // Check if player is CT banned using CTBans API
+            if (JB.JailPlugin.globalCtx?.CTBansEnabled == true && JB.JailPlugin.globalCtx._CTBansApi != null)
+            {
+                if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(player))
+                {
+                    // Remove from queue since they're banned
+                    queueSlots.Dequeue();
+                    queueSet.Remove(slot);
+                    continue;
+                }
             }
 
             // Check if player is muted by an admin
@@ -276,7 +299,7 @@ public class CTQueue
             // Respawn the player after team switch to ensure they spawn in the armory
             Server.NextWorldUpdate(() =>
             {
-                if (player.IsLegal() && player.IsCt() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
+                if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
                 {
                     // Kill the player first to remove all weapons
                     player.PlayerPawn.Value.CommitSuicide(false, true);
@@ -290,21 +313,10 @@ public class CTQueue
             queueSlots.Dequeue();
             queueSet.Remove(slot);
             processed++;
-        }
 
-        // Notify remaining players of their updated position
-        if (queueSlots.Count > 0)
-        {
-            int position = 1;
-            foreach (int slot in queueSlots)
-            {
-                CCSPlayerController? queuedPlayer = Utilities.GetPlayerFromSlot(slot);
-                if (queuedPlayer.IsLegal())
-                {
-                    queuedPlayer.LocalizeAnnounce(QUEUE_PREFIX, "queue.position_update", position);
-                }
-                position++;
-            }
+            // If we're not forcing, respect the available slots
+            if (!force && processed >= availableSlots)
+                break;
         }
     }
 

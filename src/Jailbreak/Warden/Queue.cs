@@ -21,15 +21,9 @@ public class CTQueue
         // Strict ratio without rounding up
         int maxCTs = tCount / Config.Guard.TeamRatio;
 
-        // Special case: If there are Ts but maxCTs would be 0, allow at least 1 CT
-        if (tCount > 0 && maxCTs == 0)
-            maxCTs = 1;
-
-        // Special case: If both teams are empty, allow at least one CT
-        if (ctCount == 0 && tCount == 0)
-            maxCTs = 1;
-
-        return maxCTs;
+        // Always allow at least 1 CT regardless of the ratio or player count
+        // This ensures there's always at least one CT slot available
+        return Math.Max(1, maxCTs);
     }
 
     // Helper method to check if a player is muted by an admin
@@ -330,7 +324,8 @@ public class CTQueue
         int maxCTs = CalculateMaxCTs(tCount, ctCount);
 
         // If we have more CTs than allowed, we need to rebalance
-        if (ctCount > maxCTs && ctCount > 0)
+        // But always ensure we keep at least 1 CT
+        if (ctCount > maxCTs && ctCount > 1)
         {
             needsRebalance = true;
         }
@@ -349,9 +344,11 @@ public class CTQueue
         int maxCTs = CalculateMaxCTs(tCount, ctCount);
 
         // If we have more CTs than allowed, move the newest ones to T
-        if (ctCount > maxCTs)
+        // But always ensure we keep at least 1 CT
+        if (ctCount > maxCTs && ctCount > 1)
         {
-            int excessCTs = ctCount - maxCTs;
+            // Calculate how many CTs to move while ensuring at least 1 CT remains
+            int excessCTs = ctCount - Math.Max(1, maxCTs);
 
             // Get all CT players sorted by join time (newest first)
             var ctPlayers = new List<KeyValuePair<int, DateTime>>();

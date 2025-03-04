@@ -24,6 +24,11 @@
         <HintPath>CS2-SimpleAdminApi.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <ItemGroup>
+    <Reference Include="CTBansShared">
+        <HintPath>CTBansShared.dll</HintPath>
+    </Reference>
+</ItemGroup>
 
     <ItemGroup>
         <None Include="lang\**\*.json">

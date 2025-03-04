@@ -46,7 +46,7 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     private readonly PluginCapability<ICS2_SimpleAdminApi> _SimpleAdminCapability = new("simpleadmin:api");
 
     public ICTBansApi? _CTBansApi;
-    public PluginCapability<ICTBansApi> _CTBansCapability = new("ctbans:api");
+    public static PluginCapability<ICTBansApi> CTBansCapability { get; } = new("ctbans:api");
 
     public bool SimpleAdminEnabled = false;
     public bool CTBansEnabled = false;
@@ -118,28 +118,45 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _SimpleAdminsharedApi = _SimpleAdminCapability.Get();
-
-        if (_SimpleAdminsharedApi == null)
+        try
         {
+            _SimpleAdminsharedApi = _SimpleAdminCapability.Get();
+
+            if (_SimpleAdminsharedApi == null)
+            {
+                SimpleAdminEnabled = false;
+            }
+            else
+            {
+                Logger.LogInformation("Enabling SimpleAdmin integration.");
+                SimpleAdminEnabled = true;
+            }
+        }
+        catch (KeyNotFoundException)
+        {
+            Logger.LogWarning("SimpleAdmin plugin not found. SimpleAdmin integration will be disabled.");
             SimpleAdminEnabled = false;
+            _SimpleAdminsharedApi = null;
         }
-        else
+        try
         {
-            Logger.LogInformation("Enabling SimpleAdmin integration.");
-            SimpleAdminEnabled = true;
+            _CTBansApi = CTBansCapability.Get();
+
+            if (_CTBansApi == null)
+            {
+                CTBansEnabled = false;
+            }
+            else
+            {
+                Logger.LogInformation("Enabling CTBans integration.");
+                CTBansEnabled = true;
+            }
         }
-
-        _CTBansApi = _CTBansCapability.Get();
-
-        if (_CTBansApi == null)
+        catch (KeyNotFoundException)
         {
+            Logger.LogWarning("CTBans plugin not found. CTBans integration will be disabled.");
             CTBansEnabled = false;
-        }
-        else
-        {
-            Logger.LogInformation("Enabling CTBans integration.");
-            CTBansEnabled = true;
+            _CTBansApi = null;
         }
     }
 

@@ -18,9 +18,9 @@ public class CTQueue
     // Helper method to calculate the maximum number of CTs based on T count
     private int CalculateMaxCTs(int tCount, int ctCount = 0)
     {
-        // Use ceiling division to ensure proper ratio
-        // This prevents having equal numbers of Ts and CTs
-        int maxCTs = (int)Math.Ceiling((double)tCount / Config.Guard.TeamRatio);
+        // Use floor division rather than ceiling to be more conservative
+        // This ensures we maintain at least the configured team ratio
+        int maxCTs = (int)Math.Floor((double)tCount / Config.Guard.TeamRatio);
 
         // Always allow at least 1 CT regardless of the ratio or player count
         // This ensures there's always at least one CT slot available
@@ -248,17 +248,22 @@ public class CTQueue
             return;
 
         // Add a safety check to prevent overcompensation
-        // If we're about to process players and the ratio would be too close to 1:1, limit the slots
+        // If we're about to process players and the ratio would be too close to equal teams, limit the slots
         if (!force && tCount > 0)
         {
             // Calculate what the ratio would be after adding all available slots
             double projectedRatio = (double)tCount / (ctCount + availableSlots);
 
-            // If the projected ratio would be less than 1.5 (meaning almost equal teams),
-            // reduce the available slots to maintain at least a 2:1 ratio
-            if (projectedRatio < 1.5 && tCount > 3)
+            // Minimum acceptable ratio (slightly more permissive than strict ratio)
+            double minAcceptableRatio = Config.Guard.TeamRatio * 0.75;
+
+            // If the projected ratio would be less than our minimum acceptable ratio
+            // (meaning teams would be too close to equal),
+            // reduce the available slots to maintain proper ratio
+            if (projectedRatio < minAcceptableRatio && tCount > 3)
             {
-                int safeMaxCTs = tCount / 2; // Ensure at least 2:1 ratio
+                // Calculate safe maximum CTs based on configured ratio
+                int safeMaxCTs = (int)(tCount / minAcceptableRatio);
                 int safeAvailableSlots = Math.Max(0, safeMaxCTs - ctCount);
                 availableSlots = Math.Min(availableSlots, safeAvailableSlots);
 

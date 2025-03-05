@@ -118,7 +118,7 @@ public class CTQueue
         if (ctCount == 0 && tCount > 0)
         {
             player.LocalizeAnnounce(QUEUE_PREFIX, "queue.processing_immediately");
-            ProcessQueue(true);
+            ProcessQueue();
             // End the current round and skip to the next one
             var GameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
             Server.NextWorldUpdate(() =>
@@ -475,7 +475,7 @@ public class CTQueue
         }
 
         // Process queue after rebalancing
-        ProcessQueue(true);
+        ProcessQueue();
     }
 
     public void RoundEnd()

@@ -1,4 +1,8 @@
-# CS2 Jailbreak
+# Jailbreak
+Often used with [CTBans](https://github.com/playpark/cs2-ctbans)
+
+![CS2](https://img.shields.io/badge/Game-CS2-orange)
+![CounterStrikeSharp](https://img.shields.io/badge/API-CounterStrikeSharp-blue)
 
 ### Core Features
 - **Warden System**: Complete warden management with commands, laser pointer, and team control

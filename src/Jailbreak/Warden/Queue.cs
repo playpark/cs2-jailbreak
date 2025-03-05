@@ -18,8 +18,9 @@ public class CTQueue
     // Helper method to calculate the maximum number of CTs based on T count
     private int CalculateMaxCTs(int tCount, int ctCount = 0)
     {
-        // Strict ratio without rounding up
-        int maxCTs = tCount / Config.Guard.TeamRatio;
+        // Use ceiling division to ensure proper ratio
+        // This prevents having equal numbers of Ts and CTs
+        int maxCTs = (int)Math.Ceiling((double)tCount / Config.Guard.TeamRatio);
 
         // Always allow at least 1 CT regardless of the ratio or player count
         // This ensures there's always at least one CT slot available
@@ -245,6 +246,29 @@ public class CTQueue
 
         if (availableSlots <= 0 && !force)
             return;
+
+        // Add a safety check to prevent overcompensation
+        // If we're about to process players and the ratio would be too close to 1:1, limit the slots
+        if (!force && tCount > 0)
+        {
+            // Calculate what the ratio would be after adding all available slots
+            double projectedRatio = (double)tCount / (ctCount + availableSlots);
+
+            // If the projected ratio would be less than 1.5 (meaning almost equal teams),
+            // reduce the available slots to maintain at least a 2:1 ratio
+            if (projectedRatio < 1.5 && tCount > 3)
+            {
+                int safeMaxCTs = tCount / 2; // Ensure at least 2:1 ratio
+                int safeAvailableSlots = Math.Max(0, safeMaxCTs - ctCount);
+                availableSlots = Math.Min(availableSlots, safeAvailableSlots);
+
+                // Log this safety measure if no slots are available after the check
+                if (availableSlots <= 0)
+                {
+                    return;
+                }
+            }
+        }
 
         // Process players in queue up to available slots
         int processed = 0;

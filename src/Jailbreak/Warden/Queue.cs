@@ -484,6 +484,17 @@ public class CTQueue
         if (!player.IsLegal() || !Config.Guard.Queue.Enabled)
             return;
 
+        // Check if player is CT banned using CTBans API
+        // if (player.IsCt() && JB.JailPlugin.globalCtx?.CTBansEnabled == true && JB.JailPlugin.globalCtx._CTBansApi != null)
+        // {
+        //     if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(player))
+        //     {
+        //         // Force them back to T team
+        //         player.SwitchTeam(CsTeam.Terrorist);
+        //         return;
+        //     }
+        // }
+
         // If player is trying to join CT directly, check if they're muted
         if (player.IsCt() && IsPlayerAdminMuted(player))
         {

@@ -468,20 +468,18 @@ public class CTQueue
 
     public void RoundStart()
     {
-        // Rebalance teams at round start if needed
-        if (needsRebalance)
-        {
-            RebalanceTeams();
-        }
-
-        // Process queue after rebalancing
-        ProcessQueue();
     }
 
     public void RoundEnd()
     {
         // Check if we need to rebalance teams for the next round
         CheckTeamBalance();
+
+        // Rebalance teams at round start if needed
+        if (needsRebalance)
+        {
+            RebalanceTeams();
+        }
 
         // Process queue
         ProcessQueue();

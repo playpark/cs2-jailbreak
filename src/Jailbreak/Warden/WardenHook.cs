@@ -28,7 +28,6 @@ public partial class Warden
         mute.RoundStart();
         block.RoundStart();
         warday.RoundStart();
-        ctQueue.RoundStart();
 
         foreach (CCSPlayerController player in JB.Lib.GetPlayers())
             player.SetColour(Color.FromArgb(255, 255, 255, 255));

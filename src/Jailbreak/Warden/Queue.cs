@@ -313,24 +313,27 @@ public class CTQueue
             }
 
             // Move player to CT
-            player.SwitchTeam(CsTeam.CounterTerrorist);
+            player.ChangeTeam(CsTeam.CounterTerrorist);
             Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
 
             // Track when this player joined CT
             ctJoinTimes[player.Slot] = DateTime.UtcNow;
 
             // Respawn the player after team switch to ensure they spawn in the armory
-            Server.NextWorldUpdate(() =>
+            if (JB.JailPlugin.globalCtx != null)
             {
-                if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
+                JB.JailPlugin.globalCtx.AddTimer(0.5f, () =>
                 {
-                    // Kill the player first to remove all weapons
-                    player.PlayerPawn.Value.CommitSuicide(false, true);
+                    if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
+                    {
+                        // Kill the player first to remove all weapons
+                        player.PlayerPawn.Value.CommitSuicide(false, true);
 
-                    // Then respawn them
-                    player.Respawn();
-                }
-            });
+                        // Then respawn them
+                        player.Respawn();
+                    }
+                });
+            }
 
             // Remove from queue
             queueSlots.Dequeue();
@@ -409,26 +412,21 @@ public class CTQueue
                 CCSPlayerController? player = Utilities.GetPlayerFromSlot(ctPlayer.Key);
                 if (player.IsLegal() && player.IsCt())
                 {
-                    player.SwitchTeam(CsTeam.Terrorist);
+                    player.ChangeTeam(CsTeam.Terrorist);
+                    if (JB.JailPlugin.globalCtx != null)
+                    {
+                        JB.JailPlugin.globalCtx.AddTimer(0.5f, () =>
+                        {
+                            if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
+                            {
+                                player.PlayerPawn.Value.CommitSuicide(false, true);
+
+                                player.Respawn();
+                            }
+                        });
+                    }
                     Chat.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.moved_to_t_balance", player.PlayerName);
                     ctJoinTimes.Remove(player.Slot);
-
-                    // Respawn the player after team switch to ensure they don't keep weapons
-                    // and spawn in a cell as a T
-                    Server.NextWorldUpdate(() =>
-                    {
-                        if (player.IsLegal() && player.IsT() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
-                        {
-                            // Kill the player first to remove all weapons
-                            player.PlayerPawn.Value.CommitSuicide(false, true);
-
-                            // Then respawn them
-                            player.Respawn();
-
-                            // Notify the player
-                            player.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.respawned_after_rebalance");
-                        }
-                    });
 
                     moved++;
                 }
@@ -464,10 +462,6 @@ public class CTQueue
         {
             ctJoinTimes.Remove(player.Slot);
         }
-    }
-
-    public void RoundStart()
-    {
     }
 
     public void RoundEnd()

@@ -5,15 +5,16 @@ using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Admin;
 using JB;
+using System.Numerics;
 
 public partial class LastRequest
 {
     public LastRequest()
     {
-        for(int c = 0; c < lrChoice.Length; c++)
+        for (int c = 0; c < lrChoice.Length; c++)
             lrChoice[c] = new LRChoice();
 
-        for(int lr = 0; lr < activeLR.Length; lr++)
+        for (int lr = 0; lr < activeLR.Length; lr++)
             activeLR[lr] = null;
     }
 
@@ -41,17 +42,17 @@ public partial class LastRequest
         player.StripWeapons(true);
         player.GiveArmor();
 
-        if(option == "")
-            player.Announce(LR_PREFIX,$"{lrName} is starting\n");
+        if (option == "")
+            player.Announce(LR_PREFIX, $"{lrName} is starting\n");
 
-        else player.Announce(LR_PREFIX,$"{lrName} ({option}) is starting\n");
+        else player.Announce(LR_PREFIX, $"{lrName} ({option}) is starting\n");
     }
 
     bool LRExists(LRBase lr)
     {
-        for(int l = 0; l < activeLR.Count(); l++)
+        for (int l = 0; l < activeLR.Count(); l++)
         {
-            if(activeLR[l] == lr)
+            if (activeLR[l] == lr)
                 return true;
         }
 
@@ -92,7 +93,7 @@ public partial class LastRequest
             // our handlers only check once we have actually triggered the LR
             if (InLR(tPlayer) || InLR(ctPlayer))
             {
-                tPlayer.Announce(LR_PREFIX,"One or more players is allready in LR");
+                tPlayer.Announce(LR_PREFIX, "One or more players is allready in LR");
                 return;
             }
 
@@ -114,7 +115,7 @@ public partial class LastRequest
 
         if (slot == -1)
         {
-            Chat.Announce(LR_PREFIX,"error Could not find empty lr slot");  
+            Chat.Announce(LR_PREFIX, "error Could not find empty lr slot");
             return;
         }
 
@@ -125,102 +126,105 @@ public partial class LastRequest
         switch (choice.type)
         {
             case LRType.KNIFE:
-            {
-                tLR = new LRKnife(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRKnife(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;
-            }
+                {
+                    tLR = new LRKnife(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRKnife(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.GUN_TOSS:
-            {
-                tLR = new LRGunToss(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRGunToss(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;
-            }
+                {
+                    tLR = new LRGunToss(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRGunToss(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
             case LRType.RACE:
-            {
-                tLR = new LRRace(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRRace(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;
-            }
+                {
+                    var start = new Vector3(1000, 1000, 100);
+                    var end = new Vector3(2000, 2000, 100);
+
+                    tLR = new LRRace(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRRace(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.DODGEBALL:
-            {
-                tLR = new LRDodgeball(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRDodgeball(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRDodgeball(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRDodgeball(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.GRENADE:
-            {
-                tLR = new LRGrenade(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRGrenade(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRGrenade(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRGrenade(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.WAR:
-            {
-                tLR = new LRWar(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRWar(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
-    
+                {
+                    tLR = new LRWar(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRWar(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
+
             case LRType.SCOUT_KNIFE:
-            {
-                tLR = new LRScoutKnife(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRScoutKnife(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRScoutKnife(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRScoutKnife(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.SHOT_FOR_SHOT:
-            {
-                tLR = new LRShotForShot(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRShotForShot(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRShotForShot(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRShotForShot(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.MAG_FOR_MAG:
-            {
-                tLR = new LRShotForShot(this,choice.type,slot,choice.tSlot,choice.option,true);
-                ctLR = new LRShotForShot(this,choice.type,slot,choice.ctSlot,choice.option,true);
-                break;              
-            }
+                {
+                    tLR = new LRShotForShot(this, choice.type, slot, choice.tSlot, choice.option, true);
+                    ctLR = new LRShotForShot(this, choice.type, slot, choice.ctSlot, choice.option, true);
+                    break;
+                }
 
             case LRType.HEADSHOT_ONLY:
-            {
-                tLR = new LRHeadshotOnly(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRHeadshotOnly(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRHeadshotOnly(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRHeadshotOnly(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.RUSSIAN_ROULETTE:
-            {
-                tLR = new LRRussianRoulette(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRRussianRoulette(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;              
-            }
+                {
+                    tLR = new LRRussianRoulette(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRRussianRoulette(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.NO_SCOPE:
-            {
-                tLR = new LRNoScope(this,choice.type,slot,choice.tSlot,choice.option);
-                ctLR = new LRNoScope(this,choice.type,slot,choice.ctSlot,choice.option);
-                break;                 
-            }
+                {
+                    tLR = new LRNoScope(this, choice.type, slot, choice.tSlot, choice.option);
+                    ctLR = new LRNoScope(this, choice.type, slot, choice.ctSlot, choice.option);
+                    break;
+                }
 
             case LRType.NONE:
                 return;
         }
 
         // This should not happen
-        if(slot == -1 || tLR == null || ctLR == null)
+        if (slot == -1 || tLR == null || ctLR == null)
         {
-            Chat.Announce(LR_PREFIX,$"Internal LR error in init_lr {slot} {tLR} {ctLR}");
+            Chat.Announce(LR_PREFIX, $"Internal LR error in init_lr {slot} {tLR} {ctLR}");
             return;
         }
 
         // do common player setup
-        InitPlayerCommon(tPlayer,tLR.lrName,choice.option);
-        InitPlayerCommon(ctPlayer,ctLR.lrName,choice.option); 
+        InitPlayerCommon(tPlayer, tLR.lrName, choice.option);
+        InitPlayerCommon(ctPlayer, ctLR.lrName, choice.option);
 
         // bind lr pair
         tLR.partner = ctLR;
@@ -234,7 +238,7 @@ public partial class LastRequest
 
     public void PurgeLR()
     {
-        for(int l = 0; l < activeLR.Length; l++)
+        for (int l = 0; l < activeLR.Length; l++)
             EndLR(l);
 
         rebelType = RebelType.NONE;
@@ -259,13 +263,13 @@ public partial class LastRequest
     {
         LRBase? lr = activeLR[slot];
 
-        if(lr == null)
+        if (lr == null)
             return;
 
         // cleanup each lr
         lr.Cleanup();
 
-        if(lr.partner != null)
+        if (lr.partner != null)
             lr.partner.Cleanup();
 
         // Remove lookup
@@ -281,14 +285,14 @@ public partial class LastRequest
 
         if (!player.IsLegalAlive())
         {
-            player.LocalizeAnnounce(LR_PREFIX,"lr.alive");
+            player.LocalizeAnnounce(LR_PREFIX, "lr.alive");
             return false;
         }
 
         if (InLR(player))
         {
-            player.LocalizeAnnounce(LR_PREFIX,"lr.in_lr");
-            return false;            
+            player.LocalizeAnnounce(LR_PREFIX, "lr.in_lr");
+            return false;
         }
 
         return true;
@@ -303,8 +307,8 @@ public partial class LastRequest
 
         if (!player.IsT())
         {
-            player.LocalizeAnnounce(LR_PREFIX,"lr.req_t");
-            return false;        
+            player.LocalizeAnnounce(LR_PREFIX, "lr.req_t");
+            return false;
         }
 
         return true;
@@ -319,8 +323,8 @@ public partial class LastRequest
 
         if (!player.IsCt())
         {
-            player.LocalizeAnnounce(LR_PREFIX,"lr.req_ct");
-            return false;        
+            player.LocalizeAnnounce(LR_PREFIX, "lr.req_ct");
+            return false;
         }
 
         return true;
@@ -356,18 +360,18 @@ public partial class LastRequest
 
     public bool InLR(CCSPlayerController? player)
     {
-        return FindLR(player) != null;        
+        return FindLR(player) != null;
     }
 
     public void AddLR(ChatMenu menu, bool cond, LRType type)
     {
-        if(cond)
+        if (cond)
         {
-            menu.AddMenuOption(LR_NAME[(int)type],PickOption);
+            menu.AddMenuOption(LR_NAME[(int)type], PickOption);
         }
     }
 
-    public void LRCmdInternal(CCSPlayerController? player,bool bypass)
+    public void LRCmdInternal(CCSPlayerController? player, bool bypass)
     {
         // check player can start lr
         // NOTE: higher level function checks its valid to start an lr
@@ -381,44 +385,44 @@ public partial class LastRequest
 
         ChatMenu lrMenu = new("LR Menu");
 
-        AddLR(lrMenu,Config.Prisoner.LR.Knife,LRType.KNIFE);
-        AddLR(lrMenu,Config.Prisoner.LR.GunToss,LRType.GUN_TOSS);
-        AddLR(lrMenu,Config.Prisoner.LR.Dodgeball,LRType.DODGEBALL);
-        AddLR(lrMenu,Config.Prisoner.LR.NoScope,LRType.NO_SCOPE);
-        AddLR(lrMenu,Config.Prisoner.LR.Grenade,LRType.GRENADE);
-        AddLR(lrMenu,Config.Prisoner.LR.War,LRType.WAR);
-        AddLR(lrMenu,Config.Prisoner.LR.RussianRoulette,LRType.RUSSIAN_ROULETTE);
-        AddLR(lrMenu,Config.Prisoner.LR.ScoutKnife,LRType.SCOUT_KNIFE);
-        AddLR(lrMenu,Config.Prisoner.LR.HeadshotOnly,LRType.HEADSHOT_ONLY);
-        AddLR(lrMenu,Config.Prisoner.LR.ShotForShot,LRType.SHOT_FOR_SHOT);
-        AddLR(lrMenu,Config.Prisoner.LR.MagForMag,LRType.MAG_FOR_MAG);
+        AddLR(lrMenu, Config.Prisoner.LR.Knife, LRType.KNIFE);
+        AddLR(lrMenu, Config.Prisoner.LR.GunToss, LRType.GUN_TOSS);
+        AddLR(lrMenu, Config.Prisoner.LR.Dodgeball, LRType.DODGEBALL);
+        AddLR(lrMenu, Config.Prisoner.LR.NoScope, LRType.NO_SCOPE);
+        AddLR(lrMenu, Config.Prisoner.LR.Grenade, LRType.GRENADE);
+        AddLR(lrMenu, Config.Prisoner.LR.War, LRType.WAR);
+        AddLR(lrMenu, Config.Prisoner.LR.RussianRoulette, LRType.RUSSIAN_ROULETTE);
+        AddLR(lrMenu, Config.Prisoner.LR.ScoutKnife, LRType.SCOUT_KNIFE);
+        AddLR(lrMenu, Config.Prisoner.LR.HeadshotOnly, LRType.HEADSHOT_ONLY);
+        AddLR(lrMenu, Config.Prisoner.LR.ShotForShot, LRType.SHOT_FOR_SHOT);
+        AddLR(lrMenu, Config.Prisoner.LR.MagForMag, LRType.MAG_FOR_MAG);
 
         // rebel
         if (CanRebel())
         {
-            lrMenu.AddMenuOption("Knife rebel",StartKnifeRebel);
-            lrMenu.AddMenuOption("Rebel",StartRebel);
-        
-            if(Config.Settings.RiotEnable)
-                lrMenu.AddMenuOption("Riot",StartRiot);
+            lrMenu.AddMenuOption("Knife rebel", StartKnifeRebel);
+            lrMenu.AddMenuOption("Rebel", StartRebel);
+
+            if (Config.Settings.RiotEnable)
+                lrMenu.AddMenuOption("Riot", StartRiot);
         }
 
         MenuManager.OpenChatMenu(player, lrMenu);
     }
 
     public void LRCmd(CCSPlayerController? player)
-    {   
+    {
         if (!CanStartLR(player))
             return;
 
-        LRCmdInternal(player,false);
+        LRCmdInternal(player, false);
     }
 
     // bypasses validity checks
     [RequiresPermissions("@jail/debug")]
     public void LRDebugCmd(CCSPlayerController? player, CommandInfo command)
     {
-        LRCmdInternal(player,true);
+        LRCmdInternal(player, true);
     }
     public void CancelLRCmd(CCSPlayerController? player)
     {
@@ -428,11 +432,11 @@ public partial class LastRequest
         // must be admin or warden
         if (!player.IsGenericAdmin() && !JB.JailPlugin.IsWarden(player))
         {
-            player.LocalizePrefix(LR_PREFIX,"lr.cancel_admin");
+            player.LocalizePrefix(LR_PREFIX, "lr.cancel_admin");
             return;
         }
 
-        Chat.LocalizeAnnounce(LR_PREFIX,"lr.cancel");
+        Chat.LocalizeAnnounce(LR_PREFIX, "lr.cancel");
         PurgeLR();
     }
 
@@ -502,13 +506,13 @@ public partial class LastRequest
         public int tSlot = -1;
         public int ctSlot = -1;
         public bool bypass = false;
-    } 
+    }
 
 
     public JailConfig Config = new JailConfig();
 
     LRChoice[] lrChoice = new LRChoice[64];
-    
+
     long startTimestamp = 0;
 
     public static String LR_PREFIX = $" {ChatColors.Green}[LR]: {ChatColors.White}";

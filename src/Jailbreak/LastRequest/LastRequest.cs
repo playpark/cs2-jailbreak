@@ -137,6 +137,12 @@ public partial class LastRequest
                 ctLR = new LRGunToss(this,choice.type,slot,choice.ctSlot,choice.option);
                 break;
             }
+            case LRType.RACE:
+            {
+                tLR = new LRRace(this,choice.type,slot,choice.tSlot,choice.option);
+                ctLR = new LRRace(this,choice.type,slot,choice.ctSlot,choice.option);
+                break;
+            }
 
             case LRType.DODGEBALL:
             {
@@ -458,6 +464,7 @@ public partial class LastRequest
     {
         KNIFE,
         GUN_TOSS,
+        RACE,
         DODGEBALL,
         NO_SCOPE,
         GRENADE,

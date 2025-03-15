@@ -132,7 +132,9 @@ public class CTQueue
         if (ctCount == 0 && tCount == 0)
         {
             player.LocalizeAnnounce(QUEUE_PREFIX, "queue.processing_immediately");
-            player.SwitchTeam(CsTeam.CounterTerrorist);
+            player.ChangeTeam(CsTeam.CounterTerrorist);
+            Server.NextWorldUpdate(player.Respawn);
+
             Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
 
             // Track when this player joined CT
@@ -272,6 +274,21 @@ public class CTQueue
                 {
                     return;
                 }
+            }
+        }
+
+        int potentialNextRoundTCount = Math.Max(1, tCount - 1);
+
+        int stableCTLimit = CalculateMaxCTs(potentialNextRoundTCount) + 1;
+
+        if (!force && stableCTLimit < ctCount + availableSlots)
+        {
+            int safeAvailableSlots = Math.Max(0, stableCTLimit - ctCount);
+            availableSlots = Math.Min(availableSlots, safeAvailableSlots);
+
+            if (availableSlots <= 0)
+            {
+                return;
             }
         }
 
@@ -490,7 +507,8 @@ public class CTQueue
             if (JB.JailPlugin.globalCtx._CTBansApi.CheckAndNotifyPlayerCTBan(player))
             {
                 // Force them back to T team
-                player.SwitchTeam(CsTeam.Terrorist);
+                player.ChangeTeam(CsTeam.Terrorist);
+                Server.NextWorldUpdate(player.Respawn);
                 return;
             }
         }
@@ -499,7 +517,8 @@ public class CTQueue
         if (player.IsCt() && IsPlayerAdminMuted(player))
         {
             // Force them back to T team
-            player.SwitchTeam(CsTeam.Terrorist);
+            player.ChangeTeam(CsTeam.Terrorist);
+            Server.NextWorldUpdate(player.Respawn);
             player.LocalizeAnnounce(QUEUE_PREFIX, "queue.muted_cannot_join");
             return;
         }

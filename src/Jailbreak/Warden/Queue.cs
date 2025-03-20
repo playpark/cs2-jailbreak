@@ -419,7 +419,7 @@ public class CTQueue
             // Sort by join time (newest first)
             ctPlayers.Sort((a, b) => b.Value.CompareTo(a.Value));
 
-            // Move the newest CTs to T
+            // Move the newest CTs to T and add them to front of queue
             int moved = 0;
             foreach (var ctPlayer in ctPlayers)
             {
@@ -437,13 +437,36 @@ public class CTQueue
                             if (player.IsLegal() && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null)
                             {
                                 player.PlayerPawn.Value.CommitSuicide(false, true);
-
                                 player.Respawn();
                             }
                         });
                     }
                     Chat.LocalizeAnnounce(JAILBREAK_PREFIX, "jailbreak.moved_to_t_balance", player.PlayerName);
                     ctJoinTimes.Remove(player.Slot);
+
+                    // Add to front of queue if not already in queue
+                    if (!IsInQueue(player))
+                    {
+                        var tempQueue = new Queue<int>();
+                        tempQueue.Enqueue(player.Slot);
+                        queueSet.Add(player.Slot);
+
+                        // Add all existing queue members
+                        while (queueSlots.Count > 0)
+                        {
+                            int slot = queueSlots.Dequeue();
+                            tempQueue.Enqueue(slot);
+                        }
+
+                        // Replace the original queue with the new one
+                        queueSlots.Clear();
+                        while (tempQueue.Count > 0)
+                        {
+                            queueSlots.Enqueue(tempQueue.Dequeue());
+                        }
+
+                        player.LocalizeAnnounce(QUEUE_PREFIX, "queue.added_to_front");
+                    }
 
                     moved++;
                 }

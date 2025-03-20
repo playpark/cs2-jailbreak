@@ -107,6 +107,7 @@
   "queue.position_update": "Your position in the CT queue is now: {0}",
   "queue.moved_to_ct": "{0} has been moved to the CT team from the queue.",
   "queue.muted_cannot_join": "You cannot join CT or queue for CT while you are muted by an admin.",
+  "queue.added_to_front": "You have been added to the front of the CT queue.",
   "jailbreak.moved_to_t_balance": "{0} has been moved to T team for team balance.",
   "jailbreak.team_rebalanced": "{0} players moved from CT to T for team balance.",
   "jailbreak.respawned_after_rebalance": "You have been respawned after team rebalance.",

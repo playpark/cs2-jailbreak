@@ -240,57 +240,32 @@ public class CTQueue
         int ctCount = JB.Lib.CtCount();
         int tCount = JB.Lib.TCount();
 
-        // Check if we can add more CTs based on the strict ratio
-        int maxCTs = CalculateMaxCTs(tCount, ctCount);
+        int potentialNextRoundTCount = Math.Max(1, tCount - 1);
 
-        // Calculate available slots
-        int availableSlots = maxCTs - ctCount;
+        int maxCTsNow = CalculateMaxCTs(tCount);
+
+        int basicAvailableSlots = Math.Max(0, maxCTsNow - ctCount);
+        if (basicAvailableSlots <= 0 && !force)
+            return;
+
+        int queueSize = queueSlots.Count;
+        int maxToMove = Math.Min(basicAvailableSlots, queueSize);
+
+        int predictedTCount = tCount - maxToMove;
+        int predictedCTCount = ctCount + maxToMove;
+
+        int futureMaxCTs = CalculateMaxCTs(predictedTCount);
+
+        int safeMaxToMove = maxToMove;
+        if (predictedCTCount > futureMaxCTs)
+        {
+            safeMaxToMove = Math.Max(0, futureMaxCTs - ctCount);
+        }
+
+        int availableSlots = safeMaxToMove;
 
         if (availableSlots <= 0 && !force)
             return;
-
-        // Add a safety check to prevent overcompensation
-        // If we're about to process players and the ratio would be too close to equal teams, limit the slots
-        if (!force && tCount > 0)
-        {
-            // Calculate what the ratio would be after adding all available slots
-            double projectedRatio = (double)tCount / (ctCount + availableSlots);
-
-            // Minimum acceptable ratio (slightly more permissive than strict ratio)
-            double minAcceptableRatio = Config.Guard.TeamRatio * 0.75;
-
-            // If the projected ratio would be less than our minimum acceptable ratio
-            // (meaning teams would be too close to equal),
-            // reduce the available slots to maintain proper ratio
-            if (projectedRatio < minAcceptableRatio && tCount > 3)
-            {
-                // Calculate safe maximum CTs based on configured ratio
-                int safeMaxCTs = (int)(tCount / minAcceptableRatio);
-                int safeAvailableSlots = Math.Max(0, safeMaxCTs - ctCount);
-                availableSlots = Math.Min(availableSlots, safeAvailableSlots);
-
-                // Log this safety measure if no slots are available after the check
-                if (availableSlots <= 0)
-                {
-                    return;
-                }
-            }
-        }
-
-        int potentialNextRoundTCount = Math.Max(1, tCount - 1);
-
-        int stableCTLimit = CalculateMaxCTs(potentialNextRoundTCount) + 1;
-
-        if (!force && stableCTLimit < ctCount + availableSlots)
-        {
-            int safeAvailableSlots = Math.Max(0, stableCTLimit - ctCount);
-            availableSlots = Math.Min(availableSlots, safeAvailableSlots);
-
-            if (availableSlots <= 0)
-            {
-                return;
-            }
-        }
 
         // Process players in queue up to available slots
         int processed = 0;
@@ -331,6 +306,10 @@ public class CTQueue
 
             // Move player to CT
             player.ChangeTeam(CsTeam.CounterTerrorist);
+            if (player.IsLegalAlive())
+            {
+                Server.NextWorldUpdate(player.Respawn);
+            }
             Chat.LocalizeAnnounce(QUEUE_PREFIX, "queue.moved_to_ct", player.PlayerName);
 
             // Track when this player joined CT

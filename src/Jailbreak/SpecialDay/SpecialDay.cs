@@ -253,9 +253,9 @@ public partial class SpecialDay
 
     public void SDCmd(CCSPlayerController? player)
     {
-        if (!JailPlugin.IsWarden(player))
+        if (!player.IsGenericAdmin())
         {
-            player.Announce(SPECIALDAY_PREFIX, "You must be a warden to use this command");
+            player.Announce(SPECIALDAY_PREFIX, "You must be an admin to use this command");
             return;
         }
         overrideFF = false;
@@ -265,9 +265,9 @@ public partial class SpecialDay
 
     public void SDFFCmd(CCSPlayerController? player)
     {
-        if (!JailPlugin.IsWarden(player))
+        if (!player.IsGenericAdmin())
         {
-            player.Announce(SPECIALDAY_PREFIX, "You must be a warden to use this command");
+            player.Announce(SPECIALDAY_PREFIX, "You must be an admin to use this command");
             return;
         }
         overrideFF = true;

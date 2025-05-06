@@ -473,11 +473,19 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
     {
         CCSPlayerController? player = @event.Userid;
 
-        if (player.IsLegal())
-        {
-            lr.WeaponEquip(player, @event.Item);
-            sd.WeaponEquip(player, @event.Item);
-        }
+        if (!player.IsLegal())
+            return HookResult.Continue;
+
+        // Skip if we're already processing an equip event for this player
+        if (playerEquipState.TryGetValue(player.Slot, out bool isProcessing) && isProcessing)
+            return HookResult.Continue;
+
+        playerEquipState[player.Slot] = true;
+
+        lr.WeaponEquip(player, @event.Item);
+        sd.WeaponEquip(player, @event.Item);
+
+        playerEquipState[player.Slot] = false;
 
         return HookResult.Continue;
     }
@@ -681,6 +689,9 @@ public class JailPlugin : BasePlugin, IPluginConfig<JailConfig>
 
     // workaround to query global state!
     public static JailPlugin globalCtx;
+
+    // Track equip state per player
+    private Dictionary<int, bool> playerEquipState = new Dictionary<int, bool>();
 
 #pragma warning restore CS8618
 }
